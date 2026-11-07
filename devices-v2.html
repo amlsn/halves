@@ -1,0 +1,36 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Halves v2 devices</title>
+<style>body{margin:0;background:#2a2421;font-family:system-ui;color:#eee;padding:24px}
+.frames{display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start}
+figure{margin:0}figcaption{font-size:13px;opacity:.7;margin:0 0 8px}
+iframe{border:0;border-radius:36px;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.d iframe{border-radius:14px}
+nav{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 20px}
+nav b{font-size:13px;opacity:.7;margin-right:4px}
+nav a{color:#eee;text-decoration:none;font-size:13px;font-weight:600;padding:8px 14px;border-radius:18px;background:#3a322e}
+nav a[aria-current="true"]{background:#FFDBCF;color:#3A0B00}</style></head><body>
+<nav aria-label="Presets"><b>Presets (skin / motion):</b>
+  <a href="?skin=modern&motion=fluid">modern / fluid</a>
+  <a href="?skin=poster&motion=fluid">poster / fluid</a>
+  <a href="?skin=poster&motion=hybrid">poster / hybrid</a>
+  <a href="?skin=poster&motion=fluid&theme=dark">poster / fluid · dark</a>
+  <a href="?skin=ink&motion=hybrid">ink / hybrid</a>
+  <a href="?skin=ink&motion=hybrid&theme=dark">ink / hybrid · dark</a>
+  <a href="?skin=ink&motion=fluid">ink / fluid</a>
+  <a href="?skin=poster&motion=stop">poster / stop (exp.)</a>
+  <a href="?skin=ink&motion=stop">ink / stop (exp.)</a>
+  <a href="?">stored settings</a>
+</nav>
+<div class="frames">
+<figure><figcaption>Small phone 375×667 (scaled .8)</figcaption><div style="width:300px;height:534px;overflow:hidden;border-radius:30px"><iframe id="se" data-src="prototype-v2/index.html?frame=se&touch=1" width="375" height="667" style="transform:scale(.8);transform-origin:0 0"></iframe></div></figure>
+<figure><figcaption>Phone 390×844 (scaled .8)</figcaption><div style="width:312px;height:675px;overflow:hidden;border-radius:30px"><iframe id="ph" data-src="prototype-v2/index.html?frame=phone&touch=1" width="390" height="844" style="transform:scale(.8);transform-origin:0 0"></iframe></div></figure>
+<figure class="d"><figcaption>Desktop 1280×800 (scaled)</figcaption><div style="width:896px;height:560px;overflow:hidden;border-radius:14px"><iframe id="dt" data-src="prototype-v2/index.html?frame=desk" width="1280" height="800" style="transform:scale(.7);transform-origin:0 0"></iframe></div></figure>
+</div>
+<script>
+/* Preset links reload every frame with the page's own ?skin=&motion=&bounce=&mode= (URL params win inside the prototype). */
+const q=new URLSearchParams(location.search),pass=new URLSearchParams();
+['skin','motion','bounce','mode','theme','split','mascot'].forEach(k=>{if(q.get(k))pass.set(k,q.get(k))});
+document.querySelectorAll('iframe[data-src]').forEach(f=>f.src=f.dataset.src+(pass.toString()?'&'+pass:''));
+document.querySelectorAll('nav a').forEach(a=>{const p=new URLSearchParams(a.search);a.setAttribute('aria-current',String(p.get('skin')==q.get('skin')&&p.get('motion')==q.get('motion')&&p.get('theme')==q.get('theme')))});
+</script>
+<p style="width:100%;margin:8px 0 0">Exploration: <a style="color:#f9c" href="?">reload</a> · try <code>prototype-v2/index.html?touch=1&skin=neon</code> or <code>&skin=art</code></p>
+</body></html>

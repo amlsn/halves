@@ -1,0 +1,277 @@
+/* Halves V2 · skin "poster": mid-century painted poster / enamel tin sign (DESIGN.md §9.1, §9.8 "Poster skin").
+   Every rule is scoped to html[data-skin="poster"]. poster.js injects the fonts, the SVG <symbol> art (rays, seal, mascot "Dottie")
+   and fills .ornament / .mascot; this file paints everything else.
+   Light = cream paper + maroon ink, mustard & teal accents. Dark = charcoal + neon pink.
+   Painted frames: <use class="pr-f" style="--k:N"> stacks (4 frames). Fluid shows frame 0; stop (and .sm in hybrid) swaps them
+   on step-end at 83ms ≈ 12fps. Motion amplitudes scale with --bounce; prefers-reduced-motion is handled by the base reset.
+   Original work only: no brand marks, no copied artworks.
+   V2r1 (§9.1a "too kiddish"): re-voiced toward jazz-club poster / lounge matchbook. Script only on the brand; one neon tube
+   (the hero) in dark; no halftone on Today; quiet secondary cards; numbers never jitter; Dottie is deadpan and shown rarely. */
+
+/* ============ Tokens: light ============ */
+html[data-skin="poster"]{
+  --font-ui:"Barlow",system-ui,sans-serif; --font-display:"Alfa Slab One","Rockwell",Georgia,serif;
+  --font-num:"Oswald","Arial Narrow",sans-serif; --font-script:"Yellowtail","Brush Script MT",cursive;
+  --bg:#F3E6CC; --surface:#FAF1DE; --s1:#EFE0C2; --s2:#E7D3AC; --s3:#DCC496;
+  --text:#3A1118; --muted:#6A3B3E; --outline:#C4A77A;
+  --primary:#7A1E2C; --on-primary:#FBEFD8; --primary-c:#EDC35C; --on-primary-c:#3A1118;
+  --you:#C24A2C; --you-c:#F4C7A9; --you-t:#9C3218; --sam:#1E6E68; --sam-c:#B4DBD2; --sam-t:#145550;
+  --coral:#F2BFA6; --on-coral:#46130E; --teal:#A8D5CB; --on-teal:#0D3330;
+  --lilac:#DCC3D3; --on-lilac:#3B1835; --sun:#F0CF70; --on-sun:#3A2800;
+  --sage:#CDD6A6; --on-sage:#25300C; --sky:#BCD3D8; --on-sky:#12303A;
+  --good:#2E5E34; --good-c:#D3E0B5; --warn:#7A4A00; --warn-c:#F3D98E; --bad:#9B1C1C; --bad-c:#F4C4B4;
+  --scrim:rgba(58,17,24,.42); --shadow:3px 5px 0 rgba(58,17,24,.16);
+  --r-xl:18px; --r-l:12px; --r-m:8px;
+  color-scheme:light;
+  /* poster-only tokens */
+  --pr-mustard:#E3A92B; --pr-mustard-hi:#F2C14E; --pr-teal:#1E6E68; --pr-line:#C4A77A;
+  --pr-hero-bg:var(--primary); --pr-hero-on:var(--on-primary); --pr-hero-amt:#F2C14E; --pr-hero-bd:transparent;
+  --pr-ray:rgba(227,169,43,.32); --pr-ray-hero:rgba(242,193,78,.24); --pr-seal:#7A1E2C;
+  --pr-mis-a:rgba(30,110,104,.55); --pr-mis-b:rgba(227,169,43,.8); --pr-glow:0 0 0 transparent; --pr-neon:0 0 0 transparent;
+  --pr-dot-c:rgba(122,30,44,.22); --pr-dot-hero:rgba(242,193,78,.28);
+  --pr-today:#F1D58C; --pr-today-bd:#C4A77A;
+  --pr-cap-hi:#FFF1C4; --pr-cap-c:#E8B94A; --pr-cap-lo:#9C6A14; --pr-hole:#7A1E2C; --pr-rim:#F2C14E;
+  --pr-grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .23 0 0 0 0 .07 0 0 0 0 .09 .5 0 0 0 -.18'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+/* ============ Tokens: dark (neon sign at night) — same set, twice (explicit + system) ============ */
+html[data-skin="poster"][data-theme="dark"]{
+  --bg:#1C1A1B; --surface:#252223; --s1:#2C2829; --s2:#363132; --s3:#433C3E;
+  --text:#F7E8EE; --muted:#CDB5BF; --outline:#5C4F55;
+  --primary:#FF6FAE; --on-primary:#3D0420; --primary-c:#6B1D44; --on-primary-c:#FFD8EA;
+  --you:#FF7B9C; --you-c:#5E1F31; --you-t:#FF9FB8; --sam:#4FD6C6; --sam-c:#11463F; --sam-t:#7CE6D9;
+  --coral:#5E2420; --on-coral:#FFD3C4; --teal:#11463F; --on-teal:#B6F0E6;
+  --lilac:#4A2A4C; --on-lilac:#F4D6F2; --sun:#5A4510; --on-sun:#FBE29A;
+  --sage:#33401E; --on-sage:#DCE8B8; --sky:#1F3A45; --on-sky:#C9E6F0;
+  --good:#93D9A0; --good-c:#1E3524; --warn:#F4C766; --warn-c:#463306; --bad:#FF9C9C; --bad-c:#541A22;
+  --scrim:rgba(0,0,0,.6); --shadow:0 8px 26px rgba(0,0,0,.5); color-scheme:dark;
+  --pr-mustard:#F2C14E; --pr-mustard-hi:#F2C14E; --pr-teal:#4FD6C6; --pr-line:#4A3F44;
+  --pr-hero-bg:#262123; --pr-hero-on:#F7E8EE; --pr-hero-amt:#FF6FAE; --pr-hero-bd:#FF6FAE;
+  --pr-ray:rgba(255,111,174,.13); --pr-ray-hero:rgba(255,111,174,.16); --pr-seal:#FF6FAE;
+  --pr-mis-a:rgba(79,214,198,.5); --pr-mis-b:rgba(242,193,78,.45);
+  --pr-glow:0 0 7px rgba(255,111,174,.55),0 0 22px rgba(255,111,174,.3); --pr-neon:0 0 0 1.5px #FF6FAE,0 0 16px rgba(255,111,174,.35);
+  --pr-dot-c:rgba(255,111,174,.13); --pr-dot-hero:rgba(255,111,174,.16);
+  --pr-today:#252223; --pr-today-bd:#4FD6C6;
+  --pr-cap-hi:#6A5E63; --pr-cap-c:#3A3336; --pr-cap-lo:#161314; --pr-hole:#FF6FAE; --pr-rim:#FF6FAE;
+  --pr-m-badge:#FF6FAE; --pr-m-z:#FFD8EA; --pr-m-inner:#173F3B; --pr-m-ink:#2A0614; --pr-m-blouse:#3A3336;
+  --pr-grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .85 0 0 0 0 .9 .32 0 0 0 -.12'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+@media (prefers-color-scheme:dark){html[data-skin="poster"]:not([data-theme="light"]){
+  --bg:#1C1A1B; --surface:#252223; --s1:#2C2829; --s2:#363132; --s3:#433C3E;
+  --text:#F7E8EE; --muted:#CDB5BF; --outline:#5C4F55;
+  --primary:#FF6FAE; --on-primary:#3D0420; --primary-c:#6B1D44; --on-primary-c:#FFD8EA;
+  --you:#FF7B9C; --you-c:#5E1F31; --you-t:#FF9FB8; --sam:#4FD6C6; --sam-c:#11463F; --sam-t:#7CE6D9;
+  --coral:#5E2420; --on-coral:#FFD3C4; --teal:#11463F; --on-teal:#B6F0E6;
+  --lilac:#4A2A4C; --on-lilac:#F4D6F2; --sun:#5A4510; --on-sun:#FBE29A;
+  --sage:#33401E; --on-sage:#DCE8B8; --sky:#1F3A45; --on-sky:#C9E6F0;
+  --good:#93D9A0; --good-c:#1E3524; --warn:#F4C766; --warn-c:#463306; --bad:#FF9C9C; --bad-c:#541A22;
+  --scrim:rgba(0,0,0,.6); --shadow:0 8px 26px rgba(0,0,0,.5); color-scheme:dark;
+  --pr-mustard:#F2C14E; --pr-mustard-hi:#F2C14E; --pr-teal:#4FD6C6; --pr-line:#4A3F44;
+  --pr-hero-bg:#262123; --pr-hero-on:#F7E8EE; --pr-hero-amt:#FF6FAE; --pr-hero-bd:#FF6FAE;
+  --pr-ray:rgba(255,111,174,.13); --pr-ray-hero:rgba(255,111,174,.16); --pr-seal:#FF6FAE;
+  --pr-mis-a:rgba(79,214,198,.5); --pr-mis-b:rgba(242,193,78,.45);
+  --pr-glow:0 0 7px rgba(255,111,174,.55),0 0 22px rgba(255,111,174,.3); --pr-neon:0 0 0 1.5px #FF6FAE,0 0 16px rgba(255,111,174,.35);
+  --pr-dot-c:rgba(255,111,174,.13); --pr-dot-hero:rgba(255,111,174,.16);
+  --pr-today:#252223; --pr-today-bd:#4FD6C6;
+  --pr-cap-hi:#6A5E63; --pr-cap-c:#3A3336; --pr-cap-lo:#161314; --pr-hole:#FF6FAE; --pr-rim:#FF6FAE;
+  --pr-m-badge:#FF6FAE; --pr-m-z:#FFD8EA; --pr-m-inner:#173F3B; --pr-m-ink:#2A0614; --pr-m-blouse:#3A3336;
+  --pr-grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .85 0 0 0 0 .9 .32 0 0 0 -.12'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)'/%3E%3C/svg%3E");
+}}
+
+/* ============ Paper, type ============ */
+html[data-skin="poster"] body{background-color:var(--bg);background-image:var(--pr-grain);font-variation-settings:normal;font-weight:500}
+html[data-skin="poster"] :is(.ptitle,.fhead h1,.sheet h3,.nudge-f h2,.treepane h2){font-family:var(--font-display);font-weight:400;font-variation-settings:normal;letter-spacing:.005em;color:var(--primary)}
+html[data-skin="poster"] .ptitle{font-size:36px;text-shadow:calc(2px + var(--boil-j,0) * 1px) 2px 0 var(--pr-mis-b)}
+html[data-skin="poster"] .fhead h1{font-size:30px;text-shadow:calc(2px + var(--boil-j,0) * 1px) 2px 0 var(--pr-mis-b)}
+html[data-skin="poster"] .sheet h3{font-size:22px}
+html[data-skin="poster"] .nudge-f h2{font-size:28px;text-shadow:var(--pr-glow)}
+html[data-skin="poster"] .ptitle+.muted{font-family:var(--font-ui);font-size:15px;line-height:1.5;color:var(--muted)}
+html[data-skin="poster"] :is(b.num,.hero .amt,.today .big,.det-hero .v,.amt-disp .v,.amt-disp .cur,.fnet b,.stat b,.mini-bal b,.xs-labels b,.drill-sum b.num,.tgt-card .big,.key,.dial-bubble b){font-family:var(--font-num);letter-spacing:0}
+/* big numbers: condensed + offset-print misregistration (jitters with --boil-j under stop-motion) */
+html[data-skin="poster"] :is(.today .big,.det-hero .v,.amt-disp .v,.tgt-card .big,.drill-sum b.num){font-variation-settings:"wght" 700;
+  text-shadow:2px 2px 0 var(--pr-mis-a)}
+html[data-skin="poster"] .amt-disp .v{font-variation-settings:"wght" var(--w,500)}
+html[data-skin="poster"] .amt-disp.zero .v{text-shadow:none}
+
+/* ============ Chrome: top bar, dock, rail ============ */
+html[data-skin="poster"] .topbar .brand{font-family:var(--font-script);font-weight:400;font-size:30px;letter-spacing:0;color:var(--primary);text-shadow:var(--pr-glow)}
+html[data-skin="poster"] :is(.topbar .brand i,.rail .brand-i){--s:var(--pr-scallop)!important;background:conic-gradient(from 0deg,var(--you) 0 50%,var(--sam) 0 100%)}
+html[data-skin="poster"] .toolbar{background:var(--surface);box-shadow:0 0 0 1.5px var(--pr-line),var(--shadow)}
+html[data-skin="poster"] .tb{font-family:var(--font-num);letter-spacing:.06em;text-transform:uppercase}
+html[data-skin="poster"] .tb[aria-current="true"]{border-radius:6px}
+html[data-skin="poster"] .fab{--s:var(--pr-scallop);background:radial-gradient(circle at 50% 50%,var(--primary) 0 54%,var(--pr-rim) 54% 58%,var(--primary) 58%);filter:drop-shadow(2px 4px 0 rgba(58,17,24,.22))}
+html[data-skin="poster"] .fab:hover{--s:var(--pr-scallop2)}
+html[data-skin="poster"] .fab:active{--s:var(--pr-scallop2);transform:scale(.9) rotate(-12deg)}
+html[data-skin="poster"] .pdot[aria-current="true"]::before{border-radius:2px}
+html[data-skin="poster"] .treepane,html[data-skin="poster"] main{background-image:var(--pr-grain)}
+@media (min-width:960px){html[data-skin="poster"] .treepane .mini-bal{border:1.5px solid var(--pr-line)}}
+
+/* ============ Ribbon section headers (poster.js wraps the label in .pr-rib) ============ */
+html[data-skin="poster"] h2.sec{font-family:var(--font-num);font-size:14px;letter-spacing:.14em;margin:30px 0 10px}
+html[data-skin="poster"] .pr-rib{display:inline-block;background:var(--primary);color:var(--on-primary);font-weight:600;padding:5px 20px 4px;margin-left:-4px;
+  clip-path:polygon(0 0,100% 0,calc(100% - 10px) 50%,100% 100%,0 100%,10px 50%);box-shadow:inset 0 2px 0 rgba(255,255,255,.14),inset 0 -2px 0 rgba(0,0,0,.18)}
+html[data-skin="poster"] h2.sec.pr-plain{color:var(--primary);font-weight:600}
+html[data-skin="poster"] h2.sec.pr-plain::after{content:"";flex:1;order:1;height:4px;border-top:1.5px solid var(--pr-mustard);border-bottom:1.5px solid var(--pr-mustard);max-width:100%}
+html[data-skin="poster"] h2.sec.pr-plain>.sp{flex:0}
+html[data-skin="poster"] h2.sec.pr-plain>:is(.text-btn,button,small){order:2}
+html[data-skin="poster"] .hero .ring .trk{stroke:color-mix(in srgb,var(--pr-hero-amt) 25%,transparent)}
+html[data-skin="poster"] .hstat{font-family:var(--font-num);letter-spacing:.1em;border-radius:3px}
+html[data-skin="poster"] .set-h{font-family:var(--font-num);letter-spacing:.14em;color:var(--primary);display:flex;align-items:center;gap:10px}
+html[data-skin="poster"] .set-h::after{content:"";flex:1;height:4px;border-top:1.5px solid var(--pr-mustard);border-bottom:1.5px solid var(--pr-mustard)}
+
+/* ============ Enamel badges (buttons) & ticket-stub chips ============ */
+html[data-skin="poster"] .pill-btn{border-radius:8px;font-family:var(--font-num);font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+  background-image:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,0) 55%);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,currentColor 22%,transparent)}
+html[data-skin="poster"] .pill-btn.filled,html[data-skin="poster"] .save{box-shadow:inset 0 0 0 3px var(--primary),inset 0 0 0 4.5px var(--pr-rim)}
+html[data-skin="poster"] .later-btn{border-radius:12px;font-family:var(--font-num);letter-spacing:.06em;text-transform:uppercase;box-shadow:inset 0 0 0 1.5px var(--outline)}
+html[data-skin="poster"] .sortq{border-radius:4px}
+html[data-skin="poster"] .qtitles button{border-radius:4px;box-shadow:inset 0 0 0 1.5px var(--outline);background:var(--surface)}
+html[data-skin="poster"] .save{border-radius:12px;font-family:var(--font-num);font-size:19px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;
+  background-image:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,0) 55%)}
+html[data-skin="poster"] .save.done{border-radius:50%}
+html[data-skin="poster"] .text-btn{font-weight:700}
+html[data-skin="poster"] :is(.chip,.dchip,.tagc){border-radius:4px;
+  -webkit-mask:radial-gradient(circle at 0 50%,#0000 5px,#000 5.5px) 0 0/51% 100% no-repeat,radial-gradient(circle at 100% 50%,#0000 5px,#000 5.5px) 100% 0/51% 100% no-repeat;
+          mask:radial-gradient(circle at 0 50%,#0000 5px,#000 5.5px) 0 0/51% 100% no-repeat,radial-gradient(circle at 100% 50%,#0000 5px,#000 5.5px) 100% 0/51% 100% no-repeat}
+html[data-skin="poster"] .chip{border:1.5px dashed var(--outline);background:var(--surface);padding:0 16px}
+html[data-skin="poster"] .chip[aria-pressed="true"],html[data-skin="poster"] .tagpick .chip[aria-pressed="true"]{border-radius:4px;border:1.5px solid var(--primary);background:var(--primary);color:var(--on-primary)}
+html[data-skin="poster"] .tagpick .chip{border-radius:4px}
+html[data-skin="poster"] .dchip{padding:0 16px 0 10px;box-shadow:inset 0 0 0 1.5px var(--outline)}
+html[data-skin="poster"] .dchip[aria-pressed="true"]{border-radius:4px;box-shadow:inset 0 0 0 1.5px var(--on-primary-c)}
+html[data-skin="poster"] .tagc{padding:2px 9px;border-radius:2px;font-family:var(--font-num);letter-spacing:.04em;font-weight:500;font-size:12px;
+  background:var(--s2);color:var(--muted);
+  -webkit-mask:radial-gradient(circle at 0 50%,#0000 3px,#000 3.5px) 0 0/51% 100% no-repeat,radial-gradient(circle at 100% 50%,#0000 3px,#000 3.5px) 100% 0/51% 100% no-repeat;
+          mask:radial-gradient(circle at 0 50%,#0000 3px,#000 3.5px) 0 0/51% 100% no-repeat,radial-gradient(circle at 100% 50%,#0000 3px,#000 3.5px) 100% 0/51% 100% no-repeat}
+html[data-skin="poster"] .stpill{border-radius:3px;font-family:var(--font-num);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+html[data-skin="poster"] .seg button[aria-checked="true"]{border-radius:8px}
+html[data-skin="poster"] .key{border-radius:14px;box-shadow:inset 0 -3px 0 color-mix(in srgb,var(--text) 14%,transparent);font-variation-settings:"wght" 500}
+html[data-skin="poster"] :is(.key:active,.key.hit){border-radius:8px;box-shadow:none}
+html[data-skin="poster"] :is(.ae-top input,.field input[type=text],.tagnew input){box-shadow:inset 0 0 0 1.5px var(--outline)}
+
+/* ============ Cards: tin-sign corners, pinstripes ============ */
+html[data-skin="poster"] :is(.tree,.stat,.subtile,.bars,.tgt-card,.tcard,.drill-sum){border:1.5px solid var(--pr-line)}
+html[data-skin="poster"] .list .row-x{border-radius:4px}
+html[data-skin="poster"] .list .row-x:first-child{border-radius:12px 12px 4px 4px}
+html[data-skin="poster"] .list .row-x:last-child{border-radius:4px 4px 12px 12px}
+html[data-skin="poster"] .list .row-x:only-child{border-radius:12px}
+html[data-skin="poster"] .list .row-x:not(:first-child):not(:last-child){border-radius:4px}
+html[data-skin="poster"] .list{gap:0}
+html[data-skin="poster"] .list .row-x+.row-x{box-shadow:inset 0 1.5px 0 var(--s2)}
+html[data-skin="poster"] .day{font-family:var(--font-num);font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+html[data-skin="poster"] .split-bar{border-radius:8px}
+html[data-skin="poster"] .split-bar div:first-child{border-radius:8px 3px 3px 8px}
+html[data-skin="poster"] .split-bar div:last-child{border-radius:3px 8px 8px 3px}
+
+/* ============ Hero: enamel sign + sunburst + halftone ============ */
+html[data-skin="poster"] .hero{--hero-bg:var(--pr-hero-bg);--hero-on:var(--pr-hero-on);box-shadow:var(--shadow),0 0 0 2px var(--pr-hero-bd),0 0 22px color-mix(in srgb,var(--pr-hero-bd) 30%,transparent);padding:22px 24px 20px}
+html[data-skin="poster"] .hero.over{--hero-bg:var(--bad-c);--hero-on:var(--text);--pr-hero-amt:var(--bad);--pr-ray-hero:color-mix(in srgb,var(--bad) 16%,transparent);--pr-dot-hero:color-mix(in srgb,var(--bad) 18%,transparent)}
+html[data-skin="poster"] .hero .blob{display:none}
+html[data-skin="poster"] .hero::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(circle,var(--pr-dot-hero) 1.3px,transparent 1.8px) 0 0/7px 7px;
+  -webkit-mask:linear-gradient(30deg,#000 0%,transparent 55%);mask:linear-gradient(30deg,#000 0%,transparent 55%)}
+html[data-skin="poster"] .hero::after{content:"";position:absolute;inset:6px;border-radius:calc(var(--r-xl) - 5px);pointer-events:none;
+  border:1.5px solid color-mix(in srgb,var(--pr-hero-amt) 70%,transparent)}
+html[data-skin="poster"] .hero .lbl{font-family:var(--font-num);font-size:13px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;opacity:1;color:var(--pr-hero-amt);line-height:1.2}
+html[data-skin="poster"] .hero .lbl .ms{font-size:20px}
+html[data-skin="poster"] .hero .amt{color:var(--pr-hero-amt);font-size:clamp(50px,15vw,70px);font-variation-settings:"wght" var(--w,700);
+  text-shadow:calc(3px + var(--boil-j,0) * 1px) calc(3px - var(--boil-j,0) * 1px) 0 var(--pr-mis-a),var(--pr-glow)}
+html[data-skin="poster"] .hero .of{opacity:.85;font-family:var(--font-num);letter-spacing:.06em;text-transform:uppercase;font-size:13px}
+html[data-skin="poster"] .hero .ring.ok .val{stroke:var(--pr-hero-amt)}
+html[data-skin="poster"] .hero:not(.over) .ring.warn .val{stroke:#F3D98E}
+html[data-skin="poster"] .hero .pill-btn{border-radius:8px}
+html[data-skin="poster"] .hero .mascot{--mascot-size:72px;top:12px;right:12px}
+html[data-skin="poster"] .hero .hero-main{position:relative;z-index:1}
+html[data-skin="poster"] .hero .hero-main .lbl,html[data-skin="poster"] .hero .hero-tline{padding-right:64px}
+
+/* ============ Today card (Trends) ============ */
+html[data-skin="poster"] .today{background:var(--pr-today);background-image:var(--pr-grain);border:1.5px solid var(--pr-today-bd);--muted:#6A3B3E;box-shadow:var(--shadow)}
+html[data-skin="poster"][data-theme="dark"] .today{--muted:#CDB5BF}
+@media (prefers-color-scheme:dark){html[data-skin="poster"]:not([data-theme="light"]) .today{--muted:#CDB5BF}}
+html[data-skin="poster"] .today.over{background-color:var(--bad-c)}
+html[data-skin="poster"] .today .lbl{font-family:var(--font-num);text-transform:uppercase;letter-spacing:.12em;font-size:13px}
+html[data-skin="poster"] .today .big{color:var(--primary)}
+html[data-skin="poster"] .today .mascot{--mascot-size:62px}
+/* V2r1: no halftone on Today (halftone lives on the hero only) */
+
+/* ============ Sheet, nudges, snack ============ */
+html[data-skin="poster"] .sheet{background-image:var(--pr-grain);box-shadow:0 -2px 0 var(--pr-line),var(--shadow)}
+html[data-skin="poster"] .grab i{width:44px;height:6px;background:var(--pr-mustard);border-radius:2px}
+html[data-skin="poster"] .sheet.on .grab i{animation:pr-swing calc(.6s + .25s * var(--bounce)) var(--spring) .06s both}
+@keyframes pr-swing{from{transform:rotate(-7deg) scaleX(.55)}}
+html[data-skin="poster"] .nudge-f{background-color:var(--bg);background-image:var(--pr-grain),radial-gradient(circle,var(--pr-dot-c) 1.3px,transparent 1.8px);background-size:auto,7px 7px}
+html[data-skin="poster"] .nf-in .mascot{--mascot-size:132px;position:relative;z-index:1;margin-bottom:34px}
+html[data-skin="poster"] .nf-in .nf-ic{display:none}
+html[data-skin="poster"] .nudge-b{border-radius:12px;box-shadow:var(--shadow),inset 0 0 0 3px var(--text),inset 0 0 0 4.5px var(--pr-mustard)}
+html[data-skin="poster"] .nudge-b .pill-btn.filled{box-shadow:none}
+html[data-skin="poster"] .snack{border-radius:8px}
+html[data-skin="poster"] .proto{border-radius:3px;font-family:var(--font-num)}
+
+/* ============ Thumb dial: bottle cap / rotary dial ============ */
+html[data-skin="poster"] .dial-ring{background:transparent;box-shadow:none;filter:drop-shadow(2px 4px 0 rgba(30,10,14,.28)) drop-shadow(0 0 10px color-mix(in srgb,var(--pr-hole) 18%,transparent))}
+html[data-skin="poster"] .dial-ring::before{content:"";position:absolute;inset:0;clip-path:var(--pr-cap);transition:filter .2s;
+  background:radial-gradient(circle at 36% 28%,var(--pr-cap-hi) 0 10%,var(--pr-cap-c) 48%,var(--pr-cap-lo) 100%)}
+html[data-skin="poster"] .dial-ring::after{inset:5px;box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--pr-cap-lo) 70%,transparent),inset 0 0 0 4px color-mix(in srgb,var(--pr-cap-hi) 35%,transparent)}
+html[data-skin="poster"] .dial.turning .dial-ring{background:transparent}
+html[data-skin="poster"] .dial.turning .dial-ring::before{filter:brightness(1.1) saturate(1.15)}
+html[data-skin="poster"] .dial-ticks i{width:13px;height:13px;top:7px;margin-left:-6.5px;border-radius:50%;transform-origin:50% 67px;opacity:1;
+  background:radial-gradient(circle at 60% 65%,color-mix(in srgb,var(--pr-hole) 70%,#000) 0 45%,var(--pr-hole) 70%);box-shadow:inset 1px 2px 2px rgba(0,0,0,.35)}
+html[data-skin="poster"] .dial-ticks i:nth-child(even){display:none}
+html[data-skin="poster"] .dial-ticks i:first-child{width:13px;height:13px;margin-left:-6.5px;background:var(--surface);box-shadow:inset 0 0 0 3px var(--pr-hole)}
+html[data-skin="poster"] .dial-core{--s:var(--sh-circle);background:var(--primary);color:var(--on-primary);box-shadow:inset 0 0 0 3px var(--primary),inset 0 0 0 4.5px var(--pr-rim)}
+html[data-skin="poster"] .dial.adjust .dial-core{--s:var(--sh-squircle);background:var(--text);color:var(--bg);box-shadow:none}
+html[data-skin="poster"] .dial.commit .dial-core{--s:var(--pr-scallop);background:var(--pr-mustard);color:#3A1118}
+html[data-skin="poster"] .dial.pressed .dial-core{transform:scale(.88);--s:var(--pr-scallop2)}
+html[data-skin="poster"] .dial-bubble{border-radius:8px}
+html[data-skin="poster"] .dial-opt{box-shadow:0 0 0 2px var(--pr-line),var(--shadow)}
+@media (max-height:720px){html[data-skin="poster"] .dial-ticks i,html[data-skin="poster"] .dial-ticks i:first-child{width:11px;height:11px;top:6px;margin-left:-5.5px;transform-origin:50% 56px}}
+
+/* ============ Ornament slots (SVG from poster.js) ============ */
+html[data-skin="poster"] .ornament{display:block;position:absolute;z-index:-1;pointer-events:none}
+html[data-skin="poster"] .pr-art{display:block;width:100%;height:100%;overflow:visible}
+html[data-skin="poster"] .hero .ornament[data-slot="hero"]{width:360px;height:360px;right:-132px;top:-132px;color:var(--pr-ray-hero)}
+html[data-skin="poster"] .today .ornament[data-slot="today"]{width:300px;height:300px;right:-107px;top:-107px;color:var(--pr-ray)}
+html[data-skin="poster"] .fhead{isolation:isolate}
+html[data-skin="poster"] .fhead .ornament[data-slot="folder"]{width:124px;height:124px;left:-30px;top:-30px;color:var(--pr-ray)}
+html[data-skin="poster"] .fhead .ic{box-shadow:inset 0 0 0 3px color-mix(in srgb,var(--on) 30%,transparent)}
+html[data-skin="poster"] .empty{position:relative;isolation:isolate}
+html[data-skin="poster"] .empty .ornament[data-slot="empty"]{width:140px;height:140px;left:50%;top:18px;margin-left:-70px;color:var(--pr-seal)}
+html[data-skin="poster"] .empty .shape{margin-bottom:34px;--s:var(--pr-scallop);background:var(--primary-c);color:var(--on-primary-c)}
+html[data-skin="poster"] .nf-in .ornament[data-slot="nudge"]{width:210px;height:210px;left:50%;top:-39px;margin-left:-105px;color:var(--pr-seal)}
+html[data-skin="poster"] .pr-ray{color:var(--pr-ray)}
+html[data-skin="poster"] .nf-in .pr-ray{color:color-mix(in srgb,var(--pr-mustard) 45%,transparent)}
+html[data-skin="poster"] .pr-sealu{opacity:.7}
+html[data-skin="poster"] .pr-spin,html[data-skin="poster"] .pr-spin-g{transform-origin:50% 50%;transform-box:fill-box;animation:pr-spin calc(150s / var(--bounce)) linear infinite}
+html[data-skin="poster"][data-motion="stop"] :is(.pr-spin,.pr-spin-g),html[data-skin="poster"][data-motion="hybrid"] .sm :is(.pr-spin,.pr-spin-g){animation-timing-function:steps(1800)}
+@keyframes pr-spin{to{transform:rotate(360deg)}}
+/* neon flicker on the night sign (dark only, rare) */
+html[data-skin="poster"][data-theme="dark"] .hero .ornament,html[data-skin="poster"][data-theme="dark"] .topbar .brand{animation:pr-flicker 9s step-end infinite}
+@media (prefers-color-scheme:dark){html[data-skin="poster"]:not([data-theme="light"]) :is(.hero .ornament,.topbar .brand){animation:pr-flicker 9s step-end infinite}}
+@keyframes pr-flicker{0%{opacity:1}91%{opacity:.55}92%{opacity:1}94%{opacity:.7}95%{opacity:1}}
+
+/* ============ Painted frames: frame 0 by default; 12fps swap in stop (and inside .sm in hybrid) ============ */
+html[data-skin="poster"] .pr-f:not(.pr-k0){opacity:0}
+html[data-skin="poster"][data-motion="stop"] .pr-f,html[data-skin="poster"][data-motion="hybrid"] .sm .pr-f{
+  animation:pr-frame 332ms step-end infinite;animation-delay:calc(var(--k) * 83ms - 332ms)}
+@keyframes pr-frame{0%{opacity:1}25%{opacity:0}100%{opacity:0}}
+
+/* ============ Mascot "Dottie": moods are pure CSS on [data-mood] ============ */
+html[data-skin="poster"] .mascot{display:block}
+html[data-skin="poster"] .pr-mood{display:none}
+html[data-skin="poster"] .mascot:not([data-mood]) .pr-mood-idle,
+html[data-skin="poster"] .mascot[data-mood="idle"] .pr-mood-idle,html[data-skin="poster"] .mascot[data-mood="happy"] .pr-mood-happy,
+html[data-skin="poster"] .mascot[data-mood="worried"] .pr-mood-worried,html[data-skin="poster"] .mascot[data-mood="sleepy"] .pr-mood-sleepy,
+html[data-skin="poster"] .mascot[data-mood="cheer"] .pr-mood-cheer{display:inline}
+html[data-skin="poster"] .pr-mascot{filter:url(#pr-rough) drop-shadow(1.5px 2.5px 0 rgba(30,10,14,.25));transform-origin:50% 85%}
+html[data-skin="poster"][data-theme="dark"] .pr-mascot{filter:url(#pr-rough) drop-shadow(0 0 6px rgba(255,111,174,.45))}
+@media (prefers-color-scheme:dark){html[data-skin="poster"]:not([data-theme="light"]) .pr-mascot{filter:url(#pr-rough) drop-shadow(0 0 6px rgba(255,111,174,.45))}}
+html[data-skin="poster"] .mascot .pr-mascot{animation:pr-bob 2.6s ease-in-out 2}
+html[data-skin="poster"] .mascot[data-mood="happy"] .pr-mascot{animation:pr-bob 2.2s ease-in-out 2}
+html[data-skin="poster"] .mascot[data-mood="worried"] .pr-mascot{animation:pr-fret 1.6s ease-in-out 3}
+html[data-skin="poster"] .mascot[data-mood="sleepy"] .pr-mascot{animation:pr-doze 3.4s ease-in-out infinite}
+html[data-skin="poster"] .mascot[data-mood="cheer"] .pr-mascot{animation:pr-cheer .7s var(--spring) 1}
+/* stepped (stop, or hybrid since .mascot is .sm): hold poses at ~12fps */
+html[data-skin="poster"]:is([data-motion="stop"],[data-motion="hybrid"]) .mascot .pr-mascot{animation-timing-function:steps(8)}
+html[data-skin="poster"]:is([data-motion="stop"],[data-motion="hybrid"]) .mascot[data-mood="cheer"] .pr-mascot{animation-timing-function:var(--spring)}
+@keyframes pr-bob{50%{transform:translateY(calc(-2.5px * var(--bounce))) rotate(calc(-2deg * var(--bounce)))}}
+@keyframes pr-fret{25%{transform:rotate(calc(-3deg * var(--bounce)))}75%{transform:rotate(calc(3deg * var(--bounce)))}}
+@keyframes pr-doze{50%{transform:translateY(calc(1.5px * var(--bounce))) scale(calc(1 + .03 * var(--bounce)),calc(1 - .03 * var(--bounce)))}}
+@keyframes pr-cheer{0%{transform:none}35%{transform:translateY(calc(-5px * var(--bounce))) rotate(-4deg)}100%{transform:none}}

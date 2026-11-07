@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Halves wireframes</title>
+<style>
+:root{--bg:#f4f1ee;--ink:#2b2622;--mid:#8d837b;--box:#ddd5ce;--box2:#cbc1b8;--hot:#e0602f;--teal:#12807a}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,sans-serif;padding:24px 16px 60px}
+h1{font-size:28px;margin:0 0 4px} .lead{color:var(--mid);margin:0 0 24px;max-width:780px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:28px}
+.card h2{font-size:15px;margin:0 0 8px} .card ol{margin:10px 0 0;padding-left:20px;font-size:13px;color:#4a423c} .card li{margin:3px 0}
+.ph{width:260px;height:540px;border:2px solid var(--ink);border-radius:32px;position:relative;overflow:hidden;background:#fff;padding:16px 12px;box-sizing:border-box;display:flex;flex-direction:column;gap:7px}
+.thumb::after{content:"";position:absolute;left:-30%;right:-30%;bottom:-25%;height:62%;background:radial-gradient(ellipse at 75% 100%,rgba(224,96,47,.18),transparent 70%);pointer-events:none}
+.b{background:var(--box);border-radius:10px;min-height:14px;position:relative;font-size:10px;color:#6b625b;display:flex;align-items:center;justify-content:center;text-align:center}
+.b.d{background:var(--box2)} .b.r{border-radius:999px} .b.o{background:none;border:1.5px dashed var(--box2)}
+.row{display:flex;gap:6px;align-items:center} .f{flex:1}
+.n{position:absolute;top:-7px;left:-7px;width:18px;height:18px;border-radius:9px;background:var(--hot);color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center;z-index:2}
+.sp{flex:1}
+.dock{position:absolute;left:12px;right:12px;bottom:12px;display:flex;gap:8px;align-items:center}
+.sheet{position:absolute;left:0;right:0;bottom:0;top:30%;background:#fff;border-top:2px solid var(--ink);border-radius:24px 24px 0 0;padding:12px;display:flex;flex-direction:column;gap:7px}
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.12)}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.keys .b{height:30px;border-radius:15px}
+.dial{width:78px;height:78px;border-radius:50%;border:2px solid var(--ink);background:var(--box);display:grid;place-items:center;position:absolute;right:12px;bottom:12px}
+.dial i{width:36px;height:36px;border-radius:12px;background:var(--ink)}
+.opt{position:absolute;width:26px;height:26px;border-radius:13px;background:#fff;border:2px solid var(--ink);font-size:9px;display:grid;place-items:center}
+.desk{width:640px;height:400px;border:2px solid var(--ink);border-radius:14px;background:#fff;display:grid;grid-template-columns:54px 170px 1fr;overflow:hidden;position:relative}
+.desk>div{padding:10px;display:flex;flex-direction:column;gap:7px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--mid);margin-bottom:22px}
+.legend span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-2px;background:var(--box)}
+.legend .t::before{background:radial-gradient(circle,rgba(224,96,47,.4),transparent)}
+a{color:var(--hot)}
+</style></head><body>
+<h1>Halves — lo-fi wireframes</h1>
+<p class="lead">Structure only: no colour or motion. The shaded corner on each phone is the <b>thumb zone</b> (right-handed); every frequent action has to land inside it. Numbers match the notes under each frame. Clickable hi-fi version: <a href="../prototype-v1/index.html">prototype</a> · both sizes: <a href="../devices.html">devices</a> · spec: <a href="../docs/DESIGN.md">DESIGN.md</a></p>
+<div class="legend"><span>content block</span><span class="t">thumb zone</span></div>
+
+<div class="grid">
+<!-- 1 HOME -->
+<div class="card"><h2>1 · Home / Folders</h2>
+<div class="ph thumb">
+  <div class="row"><div class="b" style="width:70px">Halves</div><div class="sp"></div><div class="b r" style="width:22px;height:22px"></div><div class="b r" style="width:22px;height:22px"></div></div>
+  <div class="b d" style="height:120px;border-radius:22px"><span class="n">1</span>Balance hero<br>"Sam owes you ₹4,280"<br>[Settle up] [History]</div>
+  <div class="row"><div class="b" style="width:60px;height:10px">FOLDERS</div><div class="sp"></div><div class="b" style="width:70px;height:10px">+ New folder<span class="n">2</span></div></div>
+  <div class="b o" style="height:170px;flex-direction:column;align-items:stretch;padding:6px;gap:5px"><span class="n">3</span>
+    <div class="row"><div class="b r" style="width:22px;height:22px"></div><div class="b f">2026 · 3 folders</div><div class="b" style="width:34px">+₹</div><div class="b" style="width:14px">⌄</div></div>
+    <div class="row" style="padding-left:20px"><div class="b r" style="width:18px;height:18px"></div><div class="b f">November</div></div>
+    <div class="row" style="padding-left:20px"><div class="b r" style="width:18px;height:18px"></div><div class="b f">October</div></div>
+    <div class="row"><div class="b r" style="width:22px;height:22px"></div><div class="b f">Goa trip</div></div>
+    <div class="row"><div class="b r" style="width:22px;height:22px"></div><div class="b f">Home setup</div><div class="b" style="width:14px">›</div></div>
+  </div>
+  <div class="b" style="height:70px">Latest 3 expenses<span class="n">4</span></div>
+  <div class="dock"><div class="b r f" style="height:44px">Folders · Activity · Insights<span class="n">5</span></div><div class="b d" style="width:48px;height:48px;border-radius:16px">+<span class="n">6</span></div></div>
+</div>
+<ol><li>One hero number. Colour shows direction (coral = owed to you, teal = you owe).</li><li>Creating a folder is secondary: a text button, not a FAB.</li><li>Tree with roll-up totals and net per folder. Chevron expands, row tap opens, long-press opens folder actions.</li><li>Latest activity so the home screen answers "what just happened?"</li><li>Floating pill toolbar; the selected tab grows to show its label.</li><li>FAB = add expense in one tap (D1).</li></ol></div>
+
+<!-- 2 FOLDER -->
+<div class="card"><h2>2 · Folder view</h2>
+<div class="ph thumb">
+  <div class="row"><div class="b r" style="width:26px">⌂</div><div class="b r" style="width:40px">2026</div><div class="b" style="width:60px;background:none">November</div><span class="n" style="position:relative;top:0;left:0">1</span></div>
+  <div class="row" style="margin-top:6px"><div class="b d" style="width:46px;height:46px;border-radius:40%"></div><div class="f"><div class="b" style="height:22px;margin-bottom:4px">November</div><div class="b" style="height:10px">5 expenses · split 50/50 (inherited)<span class="n">2</span></div></div><div class="b" style="width:14px">⋮</div></div>
+  <div class="row"><div class="b f" style="height:46px">Spent ₹46k</div><div class="b f" style="height:46px">Sam owes ₹2.1k<span class="n">3</span></div></div>
+  <div class="row"><div class="b" style="width:80px;height:66px">sub</div><div class="b" style="width:80px;height:66px">sub</div><div class="b o" style="width:70px;height:66px">+ New<span class="n">4</span></div></div>
+  <div class="row"><div class="b r" style="width:34px;height:20px">All</div><div class="b r" style="width:50px;height:20px">Groc</div><div class="b r" style="width:44px;height:20px">Rent<span class="n">5</span></div></div>
+  <div class="b" style="height:9px;width:40px;background:none;justify-content:flex-start">Today</div>
+  <div class="b" style="height:40px;border-radius:14px 14px 4px 4px">row: icon · title · who paid · amt · lent/owe<span class="n">6</span></div>
+  <div class="b" style="height:40px;border-radius:4px 4px 14px 14px">row</div>
+  <div class="b" style="height:9px;width:40px;background:none;justify-content:flex-start">Wed 4 Nov</div>
+  <div class="b" style="height:40px;border-radius:14px">row</div>
+  <div class="dock"><div class="b r f" style="height:44px">toolbar</div><div class="b d" style="width:48px;height:48px;border-radius:16px">+</div></div>
+</div>
+<ol><li>Breadcrumb chips. Tap an ancestor to go back up (slide-back transition).</li><li>The default split is visible, and you can see whether it's inherited (D3).</li><li>Two stats only: spent here (including subfolders) and the net balance.</li><li>Subfolders as a horizontal strip, with an inline "+ New" tile.</li><li>Category chips appear only when there are 2+ categories.</li><li>Rows grouped by day, joined into one card. +/− in the people colours.</li></ol></div>
+
+<!-- 3 ADD (keypad) -->
+<div class="card"><h2>3 · Add expense — amount first</h2>
+<div class="ph thumb"><div class="dim"></div>
+ <div class="sheet">
+  <div class="row"><div class="b f" style="height:30px">What was it for?<span class="n">1</span></div><div class="b r" style="width:24px;height:24px">×</div></div>
+  <div class="b" style="height:54px;background:none;font-size:30px;color:var(--ink)">₹ 630<span class="n">2</span></div>
+  <div class="b" style="height:10px;background:none">Sam will owe you ₹315</div>
+  <div class="row" style="flex-wrap:wrap;justify-content:center"><div class="b r" style="width:60px;height:20px">Groceries</div><div class="b r" style="width:54px;height:20px">You paid</div><div class="b r" style="width:40px;height:20px">50/50</div><div class="b r" style="width:56px;height:20px">November</div><div class="b r" style="width:40px;height:20px">Today<span class="n">3</span></div></div>
+  <div class="keys"><div class="b">1</div><div class="b">2</div><div class="b">3</div><div class="b">4</div><div class="b">5</div><div class="b">6</div><div class="b">7</div><div class="b">8</div><div class="b">9</div><div class="b">.</div><div class="b">0</div><div class="b">⌫<span class="n">4</span></div></div>
+  <div class="b d r" style="height:38px">✓ Add expense<span class="n">5</span></div>
+ </div></div>
+<ol><li>Title is optional. Keywords auto-pick the category ("Zepto" → Groceries).</li><li>The amount gets heavier as you type more digits (variable weight). A live "who owes" line sits under it.</li><li>Every detail is a chip showing its current value, and every one has a smart default.</li><li>Custom keypad in the thumb zone. Keys morph circle → squircle on press.</li><li>Save is the widest target. It morphs into a ✓, then a snackbar offers Undo.</li></ol></div>
+
+<!-- 4 ADD (chip editor) -->
+<div class="card"><h2>4 · Add expense — chip editor swaps in</h2>
+<div class="ph thumb"><div class="dim"></div>
+ <div class="sheet">
+  <div class="row"><div class="b f" style="height:30px">Dinner at Toit</div><div class="b r" style="width:24px;height:24px">×</div></div>
+  <div class="b" style="height:54px;background:none;font-size:30px;color:var(--ink)">₹ 3,420</div>
+  <div class="row" style="flex-wrap:wrap;justify-content:center"><div class="b r" style="width:60px;height:20px">Eating out</div><div class="b r" style="width:54px;height:20px">You paid</div><div class="b r d" style="width:40px;height:20px;outline:2px solid var(--ink)">60/40<span class="n">1</span></div><div class="b r" style="width:56px;height:20px">November</div></div>
+  <div class="row"><div class="b" style="width:60px;height:30px;background:none;color:var(--hot);font-size:16px">60%</div><div class="sp"></div><div class="b" style="width:60px;height:30px;background:none;color:var(--teal);font-size:13px">40%<span class="n">2</span></div></div>
+  <div class="row" style="height:34px"><div style="flex:6;height:26px;background:var(--hot);border-radius:13px 4px 4px 13px;opacity:.5"></div><div style="width:4px;height:34px;background:var(--ink);border-radius:2px"></div><div style="flex:4;height:26px;background:var(--teal);border-radius:4px 13px 13px 4px;opacity:.5"></div><span class="n" style="position:relative;top:0;left:0">3</span></div>
+  <div class="row"><div class="b r f" style="height:22px">Half</div><div class="b r f" style="height:22px">60/40</div><div class="b r f" style="height:22px">All mine</div><div class="b r f" style="height:22px">All Sam's<span class="n">4</span></div></div>
+  <div class="sp"></div>
+  <div class="b d r" style="height:38px">✓ Add expense</div>
+ </div></div>
+<ol><li>The active chip switches to the selected style. The keypad pane is replaced; tapping the amount brings the keypad back.</li><li>Percent labels get heavier for the larger share.</li><li>Expressive slider: thick split track, thin handle with a gap. The handle thins while you drag. Snaps (with a haptic tick) at 0/50/100 and the folder default.</li><li>Presets for the common cases. Other chips swap in the same way: category grid, You/Sam button group, folder mini-tree, date chips.</li></ol></div>
+
+<!-- 5 NEW FOLDER -->
+<div class="card"><h2>5 · New folder — year magic</h2>
+<div class="ph thumb"><div class="dim"></div>
+ <div class="sheet" style="top:24%">
+  <div class="b" style="height:20px;width:120px;background:none;justify-content:flex-start;font-size:14px;color:var(--ink)">New folder</div>
+  <div class="b" style="height:40px;justify-content:flex-start;padding-left:10px;font-size:14px;color:var(--ink)">2027|<span class="n">1</span></div>
+  <div class="b d" style="height:46px;justify-content:space-between;padding:0 10px">✨ Add 12 month folders? <span style="width:30px;height:16px;border-radius:8px;background:var(--ink)"></span><span class="n">2</span></div>
+  <div class="row"><div class="b" style="width:34px;height:34px;border-radius:40%"></div><div class="b" style="width:34px;height:34px;border-radius:50%"></div><div class="b" style="width:34px;height:34px;border-radius:30%"></div><div class="b" style="width:34px;height:34px;border-radius:45%"></div><div class="b" style="width:34px;height:34px;border-radius:35%"><span class="n">3</span></div></div>
+  <div class="b r" style="height:26px;width:120px">↳ Top level<span class="n">4</span></div>
+  <div class="sp"></div>
+  <div class="b d r" style="height:38px">Create folder</div>
+ </div></div>
+<ol><li>The name is the only required field, and it's focused on open.</li><li>A year-like name offers to create 12 month subfolders (on by default).</li><li>Pick a look: shape + icon + tone pairs. That shape becomes the folder's identity everywhere.</li><li>Parent defaults to the folder you're in.</li></ol></div>
+
+<!-- 6 DIAL -->
+<div class="card"><h2>6 · Thumb dial — turn, tap, hold</h2>
+<div class="ph thumb">
+  <div class="b d" style="height:80px;border-radius:22px">hero</div>
+  <div class="b" style="height:36px;outline:3px solid var(--hot);outline-offset:2px">focused row (Move layer)<span class="n">1</span></div>
+  <div class="b" style="height:36px">row</div>
+  <div class="b" style="height:36px">row</div>
+  <div class="b" style="height:36px">row</div>
+  <div class="b" style="position:absolute;right:12px;bottom:186px;width:130px;height:40px;background:var(--ink);color:#fff;border-radius:14px">MOVE · "Big Basket weekly"<span class="n">2</span></div>
+  <div class="opt" style="right:120px;bottom:60px">Mv</div><div class="opt" style="right:112px;bottom:104px">Sec</div><div class="opt" style="right:76px;bottom:132px">Act<span class="n">3</span></div>
+  <div class="dock" style="right:100px"><div class="b r f" style="height:44px">toolbar (narrower)</div></div>
+  <div class="dial"><i></i><span class="n">4</span></div>
+</div>
+<ol><li>Turning the ring moves a focus ring through on-screen items. Tap the centre to open the focused item.</li><li>A bubble shows the layer and what's selected or its current value.</li><li>Hold the centre: layers fan out on the thumb's arc (up-left). Slide to one and release. Like a Camera Control light press.</li><li>In the add sheet the layers are Amount → Split → Paid → Category → Date → Folder → Save. Amount steps speed up with turn speed (₹1 → ₹500). Sheets keep a right gutter clear for the dial.</li></ol></div>
+
+<!-- 7 DESKTOP -->
+<div class="card" style="grid-column:1/-1"><h2>7 · Desktop / tablet ≥ 960px</h2>
+<div class="desk">
+  <div style="background:#faf8f6;align-items:center"><div class="b d" style="width:32px;height:32px;border-radius:12px">+<span class="n">1</span></div><div class="b" style="width:30px;height:20px"></div><div class="b" style="width:30px;height:20px"></div><div class="b" style="width:30px;height:20px"></div></div>
+  <div style="background:#f1ece8"><div class="b" style="height:50px">mini balance + Settle<span class="n">2</span></div><div class="b" style="height:12px;width:60px;background:none">Folders</div><div class="b" style="height:180px">persistent tree<span class="n">3</span></div></div>
+  <div><div class="b d" style="height:90px;border-radius:20px">hero / folder header</div><div class="b" style="height:40px">row</div><div class="b" style="height:40px">row</div><div class="b" style="height:40px">row</div></div>
+  <div style="position:absolute;right:10px;top:10px;bottom:10px;width:160px;border:2px solid var(--ink);border-radius:16px;background:#fff;padding:8px;gap:6px"><div class="b" style="height:24px">sheet → side panel<span class="n">4</span></div><div class="b" style="height:40px">₹ amount</div><div class="b" style="height:60px">chips / editor</div><div class="b" style="height:24px;border-radius:12px">Save</div></div>
+</div>
+<ol><li>The nav rail holds the FAB at the top (M3 pattern for large screens).</li><li>Balance is always visible.</li><li>The tree stays open; the current folder is highlighted. Home's main pane drops its duplicate tree.</li><li>Sheets become a right-side panel. Typing digits goes straight into the amount, Enter saves, Esc closes. The dial still works there (mouse wheel).</li></ol></div>
+</div>
+</body></html>
