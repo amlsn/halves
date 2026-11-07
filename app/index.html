@@ -266,6 +266,34 @@ h2.sec .sp{flex:1}
 .dchip .bub{width:26px;height:26px;display:grid;place-items:center;background:var(--c,var(--s3));color:var(--on,var(--text));--s:var(--sh-cookie6)}
 .dchip .bub .ms{font-size:16px}
 .dchip[aria-pressed="true"]{background:var(--primary-c);color:var(--on-primary-c);border-radius:10px}
+/* T15 attachments: chip, strips, row thumbs, viewer. Colours only from tokens, so every skin restyles them. */
+.dchip.att-full{color:var(--muted)}
+.att-strip{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:-4px 0 12px}
+.att-strip:empty{display:none}
+.att-tile{position:relative;width:64px;height:64px;border-radius:14px;overflow:hidden;background:var(--s2);border:1px solid var(--outline);flex:none;padding:0;display:grid;place-items:center;color:var(--muted)}
+.att-tile img{width:100%;height:100%;object-fit:cover;display:block}
+.att-tile.busy{font-size:10px;font-weight:600;text-align:center;line-height:1.2;padding:4px}
+.att-tile.busy::after{content:"";position:absolute;inset:auto 8px 7px;height:3px;border-radius:2px;background:var(--primary);animation:attbar 1.1s ease-in-out infinite alternate;transform-origin:left}
+@keyframes attbar{from{transform:scaleX(.15)}to{transform:scaleX(1)}}
+.att-tile .x{position:absolute;top:2px;right:2px;width:24px;height:24px;border-radius:12px;background:var(--surface);color:var(--text);display:grid;place-items:center;border:1px solid var(--outline)}
+.att-tile .x .ms{font-size:16px}
+.att-tile .bad{position:absolute;inset:auto 0 0 0;background:var(--surface);color:var(--text);font-size:10px;font-weight:700;padding:2px 0;text-align:center}
+.att-note{flex-basis:100%;text-align:center;font-size:12px;color:var(--muted);font-weight:600}
+.att-note.err{color:var(--text)}
+.att-add{border-style:dashed}
+.att-th{position:relative;width:36px;height:36px;border-radius:10px;overflow:hidden;background:var(--s2);border:1px solid var(--outline);flex:none}
+.att-th img{width:100%;height:100%;object-fit:cover;display:block}
+.att-th img:not([src]),.att-tile img:not([src]){visibility:hidden}
+.att-th i{position:absolute;right:0;bottom:0;font:700 10px/1 system-ui,sans-serif;font-style:normal;background:var(--surface);color:var(--text);padding:2px 4px;border-top-left-radius:6px}
+.att-fail p{margin:0 4px 14px;font-size:15px}
+.att-viewer{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.94);display:none;touch-action:none;overflow:hidden}
+.att-viewer.on{display:block}
+.att-viewer img{position:absolute;left:50%;top:50%;max-width:100vw;max-height:100dvh;transform-origin:center;user-select:none;-webkit-user-drag:none;will-change:transform}
+.att-viewer button{position:absolute;width:48px;height:48px;border-radius:24px;background:rgba(0,0,0,.55);color:#fff;display:grid;place-items:center;border:1px solid rgba(255,255,255,.3)}
+.att-viewer button[hidden]{display:none}
+.att-viewer .vx{top:calc(12px + env(safe-area-inset-top));right:12px}
+.att-viewer .vp{left:8px;top:50%;margin-top:-24px}.att-viewer .vn{right:8px;top:50%;margin-top:-24px}
+.att-viewer .vc{position:absolute;bottom:calc(14px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;color:#fff;font-size:13px;font-weight:600}
 .dchip:active{transform:scale(.94)}
 .editor{min-height:248px;position:relative}
 .editor>.pane{animation:paneIn .45s var(--spring)}
@@ -1092,10 +1120,12 @@ function xRow(e,o2={}){
     tg.length?`<span class="tags">${tg.map(t=>'#'+esc(t)).join(' ')}</span>`:'',
     by==='sam'?`<span class="addby">added by ${esc(P.sam.name)}</span>`:'',
     o2.since&&e.at?`<span>${relTime(e.at)}</span>`:''].filter(Boolean).join('');
-  const al=`${ttl(e)}, ${money0(e.amt)}, ${forA11y(w)}${showF?', in '+f.name:''}${tg.length?', tags '+tg.join(' '):''}${pend?', to sort':''}${by==='sam'?', added by '+P.sam.name:''}`;
+  const na=attOf(e).length;
+  const al=`${ttl(e)}, ${money0(e.amt)}, ${forA11y(w)}${showF?', in '+f.name:''}${tg.length?', tags '+tg.join(' '):''}${pend?', to sort':''}${by==='sam'?', added by '+P.sam.name:''}${na?`, ${na} image${na>1?'s':''}`:''}`;
   return `<div class="row-x ${det?'t-'+c.t:'plain'} ${pend?'pend':''} ${lastAdded===e.id?'new':''}" data-x="${e.id}" role="button" tabindex="0" aria-label="${esc(al)}">
     ${det?`<div class="ic shape">${icon(c.icon,1)}</div>`:`<span class="formark">${forMark(w)}</span>`}
     <div class="tx"><b class="${e.title?'':'untitled'}">${esc(ttl(e))}</b>${meta?`<small class="meta">${meta}</small>`:''}</div>
+    ${na?`<span class="att-th" aria-hidden="true"><img data-att="${esc(attOf(e)[0].id)}" alt="">${na>1?`<i>${na}</i>`:''}</span>`:''}
     <div class="am"><b class="num">${money0(e.amt)}</b>${showF?`<small class="fol">${esc(f.name)}</small>`:''}</div>
   </div>`;
 }
@@ -1328,7 +1358,7 @@ function recentTitles(n=5){const sc={};const now=new Date(nowISO());
 function openAdd(edit,opt={}){
   hideNudge(true); // logging is what the nudge asks for: never cover the sheet with it
   const fid=edit?edit.folder:guessFolder();
-  draft=edit?{...edit,amtS:String(edit.amt/100),tags:[...(edit.tags||[])],for:forOf(edit),title:edit.title||''}:{id:null,amtS:'0',title:'',cat:null,for:effFor(fid),folder:fid,date:TODAY,tags:[]};
+  draft=edit?{...edit,amtS:String(edit.amt/100),tags:[...(edit.tags||[])],for:forOf(edit),title:edit.title||'',att:attOf(edit).map(a=>({...a}))}:{id:null,amtS:'0',title:'',cat:null,for:effFor(fid),folder:fid,date:TODAY,tags:[],att:[]};
   draft.mode='keypad';draft.tagCur=-1;draft.q=!!opt.q;draft.tagOrder=null;
   openSheet(`<button class="icon-btn" data-act="close" aria-label="Close" style="position:absolute;right:12px;top:10px">${icon('close')}</button>
     <div class="amt-disp" id="aeAmt" role="button" tabindex="0" aria-label="Amount, tap for keypad"><span class="cur">₹</span><span class="v num" aria-live="polite"></span></div>
@@ -1336,6 +1366,7 @@ function openAdd(edit,opt={}){
     <div class="ae-top"><input id="aeTitle" placeholder="What was it for? (optional)" value="${esc(draft.title)}" autocomplete="off" enterkeyhint="send" aria-label="Description. Enter saves"></div>
     <div class="qtitles" id="aeQT" role="group" aria-label="Recent titles"></div>
     <div class="dchips" id="aeChips"></div>
+    <div class="att-strip" id="aeAtt"></div>
     <div class="for-row" id="aeFor"></div>
     <div class="editor" id="aeEd"></div>
     <div class="saverow"><div class="saveaux"><span></span>
@@ -1348,7 +1379,9 @@ function openAdd(edit,opt={}){
     b.querySelector('#aeLater').onclick=()=>saveDraft(true);
     aeQT();aeRender();
     if(edit&&opt.finish&&!draft.title)setTimeout(()=>{const t=$('#aeTitle');t&&t.focus({preventScroll:true})},280);
-  });
+  },()=>{ // closed without saving: images attached in this sheet were never part of an expense → don't upload them
+    if(!draft||draft.saving)return;const keep=new Set(attOf(edit).map(a=>a.id));
+    attOf(draft).forEach(a=>{if(!keep.has(a.id))HalvesAtt.discard(a.id)})});
 }
 function aeQT(){const el=$('#aeQT');if(!el||!draft)return;
   // V2r2: shown in edit too (finishing an untitled entry); prefix-filters while typing; keeps its height after a pick (no keypad jump)
@@ -1392,8 +1425,9 @@ function aeChips(){
     (detailed()?ch('cat',`<span class="bub shape t-${c.t}">${icon(c.icon,1)}</span>${draft.cat?c.name:'Category?'}`):'')+
     ch('folder',`<span class="bub shape t-${f.t}" style="--s:var(--sh-${f.shape})">${icon(f.icon,1)}</span><span class="sr">Folder: </span>${esc(f.name)}`)+
     ch('tags',`<span class="bub shape">${icon('sell')}</span>${tg.length?esc('#'+tg[0])+(tg.length>1?' +'+(tg.length-1):''):'Tags'}`)+
-    ch('date',`<span class="bub shape">${icon('event')}</span>${dayLbl(draft.date)}`);
+    ch('date',`<span class="bub shape">${icon('event')}</span>${dayLbl(draft.date)}`)+attChip(draft.att,draft);
   $('#aeChips').querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{draft.mode=draft.mode===b.dataset.mode?'keypad':b.dataset.mode;dial.layer=draft.mode==='keypad'?'amount':draft.mode;aeRender();dialUI(true)});
+  wireAttChip($('#aeChips'),()=>attHolder());aeAtt();
   aeFor();
   aeFx();
 }
@@ -1462,6 +1496,8 @@ function saveDraft(later){
   // §9.13: no paid/share/sp on new or re-saved docs (an edit migrates a legacy doc); `by` keeps who logged it
   const rec={id:draft.id||uid(),folder:draft.folder,title,amt:p,for:FOR.includes(draft.for)?draft.for:'both',cat:draft.cat,date:draft.date,tags:[...draft.tags],
     review,by:isEdit?byOf(prevRec):'you',at:isEdit?(prevRec.at||nowISO()):nowISO()};
+  if(draft.att&&draft.att.length)rec.att=draft.att.slice(0,ATT_MAX).map(a=>({...a}));
+  if(draft.attH)draft.attH.expId=rec.id; // images still compressing land on the saved expense when done
   const inQ=draft.q;
   setTimeout(()=>{ // short hold so the button morph reads; money is committed well under 200ms
     if(isEdit){const i=expenses.findIndex(e=>e.id===rec.id);if(i>=0)expenses[i]=rec;else expenses.push(rec)}else expenses.push(rec);
@@ -1509,6 +1545,7 @@ function openDetail(id,q){
   openSheet(`${box}<div class="det-hero t-${c.t}">${det?`<div class="ic shape">${icon(c.icon,1)}</div>`:''}<div style="font-weight:650" class="${e.title?'':'untitled'}">${esc(ttl(e))}</div><div class="v num">${money(e.amt)}</div>
      ${(e.tags||[]).length?`<div style="display:flex;gap:6px;justify-content:center;margin:6px 0">${e.tags.map(t=>`<span class="tagc" style="font-size:13px;padding:4px 10px">#${esc(t)}</span>`).join('')}</div>`:''}
      <div class="muted" style="font-size:14px">${path(e.folder).map(f=>esc(f.name)).join(' › ')} · ${dayLbl(e.date)}</div></div>
+    <div class="att-strip" id="detAtt"></div>
     <div class="kv"><div><span>For</span><b style="display:flex;align-items:center;gap:8px">${forMark(w,1)}${esc(forLbl(w))}</b></div>
       <div><span>Added by</span><b>${esc(P[by].name)}${e.at?' · '+relTime(e.at):''}</b></div>${det?`<div><span>Category</span><b>${c.name}</b></div>`:''}</div>
     <div class="actions"><button class="pill-btn" data-del="${e.id}">${icon('delete')} Delete</button>${pend?(q&&nextInQ()?`<button class="pill-btn" data-skip>${icon('skip_next')} Skip</button>`:''):`<button class="pill-btn tonal" data-edit="${e.id}">${icon('edit')} Edit</button>`}</div>`,
@@ -1517,7 +1554,8 @@ function openDetail(id,q){
        closeSheet();setTimeout(()=>openAdd(e,{q,finish:pend}),250)});
      const sk=b.querySelector('[data-skip]');if(sk)sk.onclick=()=>{const nx=nextInQ();closeSheet();if(nx)setTimeout(()=>openDetail(nx.id,true),260)};
      b.querySelectorAll('[data-res]').forEach(x=>x.onclick=()=>{const undo=resolveSort(e);closeSheet();afterResolve(e,undo,q)});
-     b.querySelector('[data-del]').onclick=()=>{const i=expenses.indexOf(e);expenses.splice(i,1);closeSheet();render();snack('Expense deleted',()=>{expenses.splice(i,0,e);render()})}});
+     b.querySelector('[data-del]').onclick=()=>{const i=expenses.indexOf(e);expenses.splice(i,1);closeSheet();render();snack('Expense deleted',()=>{expenses.splice(i,0,e);render()})};
+     detAtt(e)});
 }
 /* To-sort queue: oldest first, inline one-tap actions per row, or step through one by one ("next" flow via the detail sheet) */
 function openSortQ(){
@@ -1651,6 +1689,7 @@ function openSettings(){
     <div class="set-line"><span>${DEMO?'Demo mode':'You are '+esc(myName())}<small class="muted" style="display:block;font-weight:500;font-size:12px">${DEMO?'Data stays in this browser. Nothing is sent anywhere.':esc((auth&&auth.device)||'This device')+(P.sam.name!=='Partner'?' · paired with '+esc(P.sam.name):' · partner not joined yet')}</small></span></div>
     <button class="pill-btn tonal" id="setInvite" style="width:100%;justify-content:center;height:52px;margin-top:6px">${icon('person_add')} Invite partner / add a device</button>
     <button class="pill-btn" id="setDevices" style="width:100%;justify-content:center;height:52px;margin-top:8px">${icon('devices')} Devices</button>
+    ${DEMO?'':`<div class="set-line" id="setAtt"><span>Images<small class="muted" style="display:block;font-weight:500;font-size:12px" id="setAttTx">Checking…</small></span></div>`}
     ${DEMO?`<button class="pill-btn" id="setExitDemo" style="width:100%;justify-content:center;height:52px;margin-top:8px">${icon('logout')} Leave demo</button>`:''}
     <div class="set-h">Reminders</div>
     <div id="remBox"></div>`,
@@ -1669,6 +1708,8 @@ function openSettings(){
     $('#setInvite').onclick=()=>{closeSheet();setTimeout(invite,260)};
     $('#setDevices').onclick=()=>{closeSheet();setTimeout(openDevices,260)};
     const xd=$('#setExitDemo');if(xd)xd.onclick=()=>{location.href=location.pathname};
+    if(!DEMO)attUsage().then(u=>{const t=$('#setAttTx');if(!t)return;if(!u){t.textContent='Usage unavailable offline';return}
+      const pct=u.bytes/u.capBytes;t.innerHTML=`${esc(gb(u.bytes))} of ${esc(gb(u.capBytes))} used`+(pct>=1?'<br><b>Image storage is full. New images stay on this phone only.</b>':pct>=.75?'<br><b>Image storage is '+Math.round(pct*100)+'% full.</b>':'')});
     remBox();
   });
 }
@@ -2091,6 +2132,7 @@ function coach(){
 document.body.classList.toggle('dial-left',dial.left);
 try{history.replaceState({r:route},'')}catch(e){}
 addEventListener('popstate',e=>{
+  if(viewerOpen()){closeViewer();return} // Back closes the image viewer first (it pushed its own entry)
   if(sheetOpen()){closeSheet();try{history.pushState({r:route},'')}catch(x){}return} // Back closes the sheet first
   go((e.state&&e.state.r)||{v:'home'},'back',true);
 });
@@ -2161,10 +2203,10 @@ function ensureFolders(){
   ['January','February','March','April','May','June','July','August','September','October','November','December'].forEach((m,i)=>folders.push({id:id+'m'+i,name:m,parent:id,icon:'calendar_today',shape:S[i%6],t:T[i%6]}));
   open.add(id);if(!gated&&!sheetOpen())render();
 }
-function afterSheet(){if(HalvesSync.flush()&&!gated)render();setTimeout(showApprovals,380)}
+function afterSheet(){if(HalvesSync.flush()&&!gated)render();setTimeout(showApprovals,380);setTimeout(showAttFail,420)}
 
 /* T5a: the single quiet line, only when sync is genuinely in danger */
-function dangerLine(){const d=!gated&&HalvesSync.danger();if(!d)return'';
+function dangerLine(){const d=!gated&&(HalvesSync.danger()||(attDangerN?{n:attDangerN,what:attDangerN===1?'image':'images'}:null));if(!d)return'';
   return `<div class="suggest sync-danger" role="status">${icon('cloud_off')}<div class="tx"><b>${d.n} ${d.what} ${d.n===1?'is':'are'} only on this phone</b>${d.refused?`<br><small>This browser may clear its copy.${IOS&&!STANDALONE?' Add Halves to your Home Screen to keep it.':''}</small>`:''}</div><button class="pill-btn" data-act="trysync">Try now</button></div>`}
 
 /* day rollover: TODAY / month maths follow the real clock */
@@ -2267,7 +2309,7 @@ function pendingScreen(){
   addEventListener('focus',poll);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&gated)poll()});
 }
 async function signedOut(){
-  ls.del(AUTH_K);auth=null;await HalvesSync.wipe();folders.length=0;expenses.length=0;settles.length=0;TAGS.length=0;targets.length=0;
+  ls.del(AUTH_K);auth=null;await HalvesSync.wipe();await HalvesAtt.wipe();folders.length=0;expenses.length=0;settles.length=0;TAGS.length=0;targets.length=0;
   showGate(`${gHead('This device was signed out','It was removed from Halves on another device, so its copy of the data was cleared.','sleepy')}
     <div class="g-card"><p>To use Halves here again, ask your partner for a new invite link.</p><button class="save" id="gGo">${icon('arrow_forward')}<span>Start again</span></button></div>`,
     g=>g.querySelector('#gGo').onclick=()=>welcomeScreen());
@@ -2280,7 +2322,9 @@ async function startApp(){
   for(const k in shared)if(shared[k]==null)shared[k]=null; // untouched until someone changes it (then it syncs)
   const y=folders.find(f=>f.name===TODAY.slice(0,4)&&!f.parent);if(y)open.add(y.id);
   applyPrefs();render(true);if(dial.on){dialCtx();setTimeout(coach,800)}
-  if(!DEMO){refreshMe();checkPending()}
+  HalvesAtt.init({onFail:(id,reason)=>{if(reason==='storage_full')attFull=true;attFails.push({id,reason});showAttFail()},onChange:attRefreshDanger});
+  setInterval(attRefreshDanger,60e3);attRefreshDanger();
+  if(!DEMO){refreshMe();checkPending();attUsage()}
 }
 async function refreshMe(){if(!auth||!auth.token)return;let r;try{r=await api('me')}catch(e){return}
   if(r.status===401)return signedOut();if(!r.ok||!r.json)return;
@@ -2338,6 +2382,157 @@ async function openDevices(){
       if(!r2.ok)return snack(r2.json&&r2.json.error==='last_device'?'That’s the last device: revoking it would lock you out.':'Couldn’t revoke. Try again.');
       if(r2.json&&r2.json.self)return signedOut();closeSheet();snack('Device revoked');setTimeout(openDevices,300)})});
 }
+
+/* ============ T15: image attachments (UI). Compression is lazy (attach.js); uploads/cache are HalvesAtt (sync.js) ============ */
+const ATT_MAX=5;
+const attOf=e=>Array.isArray(e&&e.att)?e.att.filter(a=>a&&typeof a.id==='string'):[];
+let attFull=false,attFails=[],attDangerN=0,attMod=null;
+const attJobs=[]; // {key, holder, label, err}
+const gb=b=>b>=1024**3?(b/1024**3).toFixed(b>=10*1024**3?0:1)+' GB':b>=1024**2?(b/1024**2).toFixed(1)+' MB':Math.max(1,Math.round(b/1024))+' KB';
+const kb=b=>b>=1024**2?(b/1024**2).toFixed(1)+' MB':Math.max(1,Math.round(b/1024))+' KB';
+const attId=()=>'i'+HalvesSync.rid(15);
+const loadAttach=()=>attMod||(attMod=import(APPBASE+'attach.js').catch(e=>{attMod=null;throw e}));
+async function attUsage(){if(DEMO)return null;try{const r=await api('usage');if(!r.ok||!r.json)return null;
+  attFull=r.json.bytes+1024*1024>r.json.capBytes;return r.json}catch(e){return null}}
+async function attRefreshDanger(){const n=await HalvesAtt.danger().catch(()=>0);if(n!==attDangerN){attDangerN=n;if(!gated&&!sheetOpen())render()}}
+/* thumbnails in rows / strips: <img data-att> filled after each render from cache → outbox → network */
+function hydrateAtt(root=document){root.querySelectorAll('img[data-att]:not([src])').forEach(img=>{if(img.dataset.ld)return;img.dataset.ld=1;
+  HalvesAtt.url(img.dataset.att,'thumb').then(u=>{if(u)img.src=u;else setTimeout(()=>{delete img.dataset.ld},31e3)})})}
+document.addEventListener('halves:render',()=>hydrateAtt($('#main')));
+/* who receives a finished image: the open add sheet (draft) or, after save / from the detail sheet, an expense */
+function attHolder(){if(!draft)return null;return draft.attH||(draft.attH={draft,expId:null})}
+function attTarget(h){if(h.expId){const e=expenses.find(x=>x.id===h.expId);return e?{list:attOf(e),set:l=>{if(l.length)e.att=l;else delete e.att},exp:e}:null}
+  if(h.draft&&draft===h.draft)return{list:draft.att,set:l=>{draft.att=l},draft:true};return null}
+function attChip(list,d){const n=list.length;
+  if(attFull)return`<button class="dchip att-chip att-full" data-attach="full"><span class="bub shape">${icon('cloud_off')}</span>Image storage full</button>`;
+  return`<button class="dchip att-chip" data-attach="${n>=ATT_MAX?'max':'1'}" aria-label="Attach image${n?`, ${n} attached`:''}"><span class="bub shape">${icon('attach_file')}</span>${n?`${n} image${n>1?'s':''}`:'Attach'}</button>`}
+function wireAttChip(root,getHolder){const b=root.querySelector('[data-attach]');if(!b)return;
+  b.onclick=()=>{if(b.dataset.attach==='full')return snack('Image storage is full (1.5 GB limit). The expense still saves.');
+    if(b.dataset.attach==='max')return snack(`Up to ${ATT_MAX} images per expense`);
+    const h=getHolder();if(h)attPick(h)}}
+/* <input type=file accept=image/*> with no `capture`: phones offer camera AND library */
+function attPick(h){const i=document.createElement('input');i.type='file';i.accept='image/*';i.multiple=true;i.style.display='none';
+  i.onchange=()=>{const f=[...(i.files||[])];i.remove();if(f.length)attFiles(f,h)};document.body.appendChild(i);i.click();loadAttach().catch(()=>{})}
+async function attFiles(files,h){
+  const t0=attTarget(h);if(!t0)return;
+  const room=ATT_MAX-t0.list.length-attJobs.filter(j=>j.holder===h&&!j.err).length;
+  if(room<=0)return snack(`Up to ${ATT_MAX} images per expense`);
+  if(files.length>room)snack(`Only ${room} more image${room>1?'s':''} fit (max ${ATT_MAX})`);
+  for(const f of files.slice(0,room)){
+    const job={key:attId(),holder:h,label:'Compressing…'};attJobs.push(job);attRedraw(h);
+    let out;
+    try{const m=await loadAttach();out=await m.compress(f,s=>{job.label=s;attRedraw(h)})}
+    catch(e){job.err=e&&e.code==='too_large'?'Too large even after compression':e&&e.code==='bad_type'?'Not an image this phone can read':'Couldn’t read that image';
+      console.warn('[attach]',e);attRedraw(h);setTimeout(()=>{attJobs.splice(attJobs.indexOf(job),1);attRedraw(h)},6000);continue}
+    const meta={id:job.key,w:out.full.w,h:out.full.h,bytes:out.full.blob.size,type:out.full.type};
+    await HalvesAtt.queue(meta.id,{full:out.full,thumb:out.thumb});
+    attJobs.splice(attJobs.indexOf(job),1);
+    const t=attTarget(h);
+    if(!t||t.list.length>=ATT_MAX){HalvesAtt.discard(meta.id);attRedraw(h);continue} // sheet closed without saving: drop it
+    t.set([...t.list,meta]);h.note=`${kb(out.orig)} → ${kb(meta.bytes)}`;
+    if(!t.draft){render()}  // an expense changed → sync diff picks up the new att entry at once
+    attRedraw(h);
+  }
+}
+/* redraw whichever strip shows this holder (add sheet or detail sheet) */
+function attRedraw(h){if(draft&&h===draft.attH&&$('#aeChips')){aeChips();return}
+  const d=$('#detAtt');if(d&&h.expId&&d.dataset.exp===h.expId)detAtt(expenses.find(x=>x.id===h.expId))}
+function attStripHtml(list,h,removable,failed={}){
+  const jobs=attJobs.filter(j=>j.holder===h);
+  return list.map((a,i)=>`<div class="att-tile"><button class="att-open" data-i="${i}" aria-label="View image ${i+1}" style="all:unset;display:block;width:100%;height:100%;cursor:zoom-in"><img data-att="${esc(a.id)}" alt=""></button>
+      ${failed[a.id]?`<span class="bad">Not uploaded</span>`:''}${removable?`<button class="x" data-rm="${esc(a.id)}" aria-label="Remove image ${i+1}">${icon('close')}</button>`:''}</div>`).join('')+
+    jobs.map(j=>j.err?`<div class="att-note err" role="status">${icon('error')} ${esc(j.err)}</div>`:`<div class="att-tile busy" role="status">${esc(j.label)}</div>`).join('')+
+    (h&&h.note&&!jobs.some(j=>!j.err)?`<div class="att-note">${esc(h.note)}</div>`:'')}
+function aeAtt(){const el=$('#aeAtt');if(!el||!draft)return;const h=attHolder();
+  el.innerHTML=attStripHtml(draft.att,h,true);hydrateAtt(el);
+  el.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{const id=b.dataset.rm;const was=attOf({att:draft.att}).some(a=>a.id===id);
+    draft.att=draft.att.filter(a=>a.id!==id);
+    if(was&&!(draft.id&&attOf(expenses.find(x=>x.id===draft.id)).some(a=>a.id===id)))HalvesAtt.discard(id); // new & unsaved: nothing to keep
+    h.note='';aeAtt();aeChips()});
+  el.querySelectorAll('.att-open').forEach(b=>b.onclick=()=>openViewer(draft.att,+b.dataset.i))}
+async function detAtt(e){const el=$('#detAtt');if(!el||!e)return;el.dataset.exp=e.id;
+  const h=attJobs.find(j=>j.holder.expId===e.id&&!j.holder.draft)?.holder||(el._h&&el._h.expId===e.id?el._h:(el._h={expId:e.id}));
+  const list=attOf(e),st=await HalvesAtt.status().catch(()=>({failed:{}}));
+  if(!$('#detAtt')||$('#detAtt')!==el)return;
+  el.innerHTML=attStripHtml(list,h,true,st.failed)+
+    (list.length<ATT_MAX?`<button class="att-tile att-add" data-attach="${attFull?'full':'1'}" aria-label="${attFull?'Image storage full':'Attach image'}">${icon(attFull?'cloud_off':'add_photo_alternate')}</button>`:'')+
+    (Object.keys(st.failed).some(id=>list.some(a=>a.id===id))?`<div class="att-note err">Some images didn’t upload. <button class="text-btn" data-retry>Retry</button></div>`:'');
+  hydrateAtt(el);
+  wireAttChip(el,()=>h);
+  const rt=el.querySelector('[data-retry]');if(rt)rt.onclick=()=>{list.forEach(a=>st.failed[a.id]&&HalvesAtt.retry(a.id));snack('Trying the upload again…');setTimeout(()=>detAtt(e),300)};
+  el.querySelectorAll('.att-open').forEach(b=>b.onclick=()=>openViewer(list,+b.dataset.i));
+  el.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{
+    if(!b.dataset.armed){b.dataset.armed=1;b.innerHTML=icon('delete');b.setAttribute('aria-label','Tap again to remove');buzz(10);return}
+    const prev=attOf(e),id=b.dataset.rm,next=prev.filter(a=>a.id!==id);if(next.length)e.att=next;else delete e.att; // soft: the R2 object stays (Undo)
+    render();detAtt(e);snack('Image removed',()=>{e.att=prev;render();detAtt(e)})})}
+/* "Image upload failed": the app's own sheet, one refusal at a time, never over another sheet */
+const ATT_WHY={storage_full:['Image storage is full (1.5 GB limit). This image is only on this phone for now.',true],
+  too_large:['This image is too large even after compression.',false],
+  bad_type:['This file isn’t a supported image (WebP, JPEG or PNG).',false],bad_image:['This file isn’t a supported image (WebP, JPEG or PNG).',false],
+  daily_cap:['This phone has uploaded its 200 images for today. Try again tomorrow.',true],
+  auth:['This device isn’t allowed to upload right now (signed out, or still waiting for approval).',true]};
+function showAttFail(){
+  if(!attFails.length||gated||sheetOpen()||draft)return;
+  const f=attFails.shift(),[why,retry]=ATT_WHY[f.reason]||['The server refused this image.',true];
+  const e=expenses.find(x=>attOf(x).some(a=>a.id===f.id));
+  openSheet(`<div class="att-fail"><h3>${icon('error')} Image upload failed</h3><p>${esc(why)}</p>
+    ${e?`<p class="muted" style="font-size:13px">On “${esc(ttl(e))}”, ${esc(money0(e.amt))}. The expense itself is saved.</p>`:''}
+    <div class="actions">${retry?`<button class="pill-btn tonal" id="afRetry">${icon('refresh')} Retry</button>`:''}
+      <button class="pill-btn" id="afRm">${icon('delete')} Remove image</button><button class="pill-btn filled" id="afOk">OK</button></div></div>`,
+  b=>{const r=b.querySelector('#afRetry');if(r)r.onclick=()=>{if(f.reason==='storage_full')attFull=false;HalvesAtt.retry(f.id);closeSheet();snack('Trying the upload again…')};
+    b.querySelector('#afRm').onclick=()=>{for(const x of expenses){const l=attOf(x);if(l.some(a=>a.id===f.id)){const n=l.filter(a=>a.id!==f.id);if(n.length)x.att=n;else delete x.att}}
+      HalvesAtt.discard(f.id);closeSheet();render();snack('Image removed')};
+    b.querySelector('#afOk').onclick=()=>closeSheet()});
+}
+/* full-screen viewer: thumb first, then the full image; pinch / wheel / double-tap zoom, drag to pan; Back closes */
+const viewerOpen=()=>{const v=document.getElementById('attViewer');return!!v&&v.classList.contains('on')};
+let vw=null;
+function openViewer(list,i){
+  let v=document.getElementById('attViewer');
+  if(!v){v=document.createElement('div');v.id='attViewer';v.className='att-viewer';v.setAttribute('role','dialog');v.setAttribute('aria-modal','true');v.setAttribute('aria-label','Image');
+    v.innerHTML=`<img alt="" draggable="false"><button class="vx" aria-label="Close image">${icon('close')}</button><button class="vp" aria-label="Previous image">${icon('chevron_left')}</button><button class="vn" aria-label="Next image">${icon('chevron_right')}</button><div class="vc" aria-live="polite"></div>`;
+    document.body.appendChild(v);
+    v.querySelector('.vx').onclick=()=>history.back();
+    v.querySelector('.vp').onclick=()=>vwShow(vw.i-1);v.querySelector('.vn').onclick=()=>vwShow(vw.i+1);
+    const img=v.querySelector('img'),pts=new Map();let start=null,lastTap=0;
+    const apply=()=>{img.style.transform=`translate(-50%,-50%) translate(${vw.x}px,${vw.y}px) scale(${vw.s})`};
+    const clamp=()=>{vw.s=Math.max(1,Math.min(6,vw.s));if(vw.s===1){vw.x=0;vw.y=0}};
+    let moved=false,multi=false;
+    v.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;try{v.setPointerCapture(e.pointerId)}catch(x){}pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      if(pts.size===1){moved=false;multi=false}else multi=true;
+      start={s:vw.s,x:vw.x,y:vw.y,pts:new Map([...pts].map(([k,p])=>[k,{...p}]))}});
+    v.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId)||!start)return;const p0=start.pts.get(e.pointerId);if(p0&&Math.hypot(e.clientX-p0.x,e.clientY-p0.y)>8)moved=true;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      const a=[...pts.values()],b=[...start.pts.values()];
+      if(a.length>=2&&b.length>=2){const d=(p,q)=>Math.hypot(p.x-q.x,p.y-q.y);vw.s=start.s*d(a[0],a[1])/Math.max(1,d(b[0],b[1]));
+        vw.x=start.x+((a[0].x+a[1].x)-(b[0].x+b[1].x))/2;vw.y=start.y+((a[0].y+a[1].y)-(b[0].y+b[1].y))/2}
+      else if(vw.s>1){vw.x=start.x+a[0].x-b[0].x;vw.y=start.y+a[0].y-b[0].y}
+      clamp();apply()});
+    const up=e=>{if(!pts.has(e.pointerId))return;pts.delete(e.pointerId);
+      if(e.type==='pointerup'&&!pts.size&&!moved&&!multi){const now=Date.now();if(now-lastTap<300){vw.s=vw.s>1?1:2.5;clamp();apply();lastTap=0}else lastTap=now} // double-tap toggles zoom
+      start=pts.size?{s:vw.s,x:vw.x,y:vw.y,pts:new Map([...pts].map(([k,p])=>[k,{...p}]))}:null};
+    v.addEventListener('pointerup',up);v.addEventListener('pointercancel',up);
+    v.addEventListener('wheel',e=>{e.preventDefault();vw.s*=e.deltaY<0?1.15:1/1.15;clamp();apply()},{passive:false});
+    vw={apply};
+  }
+  vw={...vw,list,i:0,s:1,x:0,y:0};
+  v.classList.add('on');try{history.pushState({attv:1,r:route},'')}catch(e){}
+  vwShow(i);setTimeout(()=>v.querySelector('.vx').focus({preventScroll:true}),30);
+}
+async function vwShow(i){const v=$('#attViewer');if(!v||!vw)return;const n=vw.list.length;if(i<0||i>=n)return;
+  if(vw.full)HalvesAtt.release(vw.full,'full');vw.full=null;
+  vw.i=i;vw.s=1;vw.x=0;vw.y=0;vw.apply();const a=vw.list[i],img=v.querySelector('img');
+  v.querySelector('.vp').hidden=i===0;v.querySelector('.vn').hidden=i>=n-1;
+  const cap=v.querySelector('.vc');cap.textContent=(n>1?`${i+1} of ${n} · `:'')+'Loading…';
+  img.removeAttribute('src');const t=await HalvesAtt.url(a.id,'thumb');if(vw.i===i&&t&&!img.src)img.src=t;
+  const f=await HalvesAtt.url(a.id,'full');if(!viewerOpen()||vw.i!==i)return;
+  if(f){img.src=f;vw.full=a.id;cap.textContent=(n>1?`${i+1} of ${n} · `:'')+kb(a.bytes||0)}
+  else cap.textContent=(n>1?`${i+1} of ${n} · `:'')+(t?'Full image not available yet':'Image not available yet (still uploading from the other phone?)')}
+function closeViewer(){const v=$('#attViewer');if(!v)return;v.classList.remove('on');if(vw&&vw.full){HalvesAtt.release(vw.full,'full');vw.full=null}
+  v.querySelector('img').removeAttribute('src')}
+document.addEventListener('keydown',e=>{if(!viewerOpen())return;
+  if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();history.back()}
+  else if(e.key==='ArrowLeft'){e.stopImmediatePropagation();vwShow(vw.i-1)}else if(e.key==='ArrowRight'){e.stopImmediatePropagation();vwShow(vw.i+1)}
+  else if(e.key!=='Tab')e.stopImmediatePropagation()},true);
 
 /* ---- boot ---- */
 if('serviceWorker' in navigator&&location.protocol!=='file:'&&!QS.has('nosw'))addEventListener('load',()=>navigator.serviceWorker.register(APPBASE+'sw.js',{scope:APPBASE}).catch(()=>{}));

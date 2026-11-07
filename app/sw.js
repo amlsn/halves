@@ -1,11 +1,14 @@
 /* Halves service worker: precaches the app shell so the app opens offline.
    - index.html (navigations): network-first, cached copy when offline.
    - other shell files: stale-while-revalidate (bump VERSION on deploys so all files switch together).
-   - /api/* is NEVER cached or intercepted. WebSockets never pass through here. */
+   - /api/* is NEVER cached or intercepted (attachment images are fetched with the token and cached by the app
+     itself in IndexedDB, T15). WebSockets never pass through here.
+   - attach.js / attach-enc.js are small and precached; the WebP WASM in vendor/ (~300 KB, Safari only) is
+     cached on first use by the stale-while-revalidate branch below. */
 const VERSION = 'halves-shell-v1';
 const FONTS = 'halves-fonts-v1';
 const SHELL = [
-  './', 'sync.js', 'manifest.webmanifest',
+  './', 'sync.js', 'attach.js', 'attach-enc.js', 'manifest.webmanifest',
   'skins/art.css', 'skins/art.js', 'skins/ink.css', 'skins/ink.js',
   'skins/neon.css', 'skins/neon.js', 'skins/poster.css', 'skins/poster.js',
   'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png', 'icons/apple-touch-icon.png'

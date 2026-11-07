@@ -1,6 +1,9 @@
 // Integration tests: real Worker + Pair DO inside workerd (via @cloudflare/vitest-plugin).
 // Contract: docs/TECH-DESIGN.md §B1.
 import { SELF, reset } from "cloudflare:test";
+import { env as workerEnv } from "cloudflare:workers";
+import type { Env } from "../worker/src/index";
+const env = workerEnv as unknown as Env;
 import { beforeEach, describe, expect, it } from "vitest";
 
 const BASE = "https://halves.amlanandanwesha.com";
@@ -319,5 +322,121 @@ describe("websocket", () => {
     w.ws.send("ping");
     expect(await w.next()).toBe("pong");
     w.ws.close();
+  });
+});
+
+// ---------- attachments (T15) ----------
+// Test caps (vitest.config.ts): ATT_CAP_BYTES=3000, ATT_DAILY_CAP=6.
+const webp = (n = 64) => {
+  const b = new Uint8Array(n);
+  b.set([0x52, 0x49, 0x46, 0x46], 0); // RIFF
+  b.set([0x57, 0x45, 0x42, 0x50], 8); // WEBP
+  for (let i = 12; i < n; i++) b[i] = i & 0xff;
+  return b;
+};
+const jpeg = (n = 64) => { const b = new Uint8Array(n).fill(7); b.set([0xff, 0xd8, 0xff], 0); return b; };
+type AttOpts = { method?: string; token?: string; origin?: string | null; type?: string; body?: Uint8Array };
+async function att(id: string, kind: string, o: AttOpts = {}) {
+  const headers: Record<string, string> = {};
+  if (o.origin !== null) headers.Origin = o.origin ?? ORIGIN;
+  if (o.token) headers.Authorization = `Bearer ${o.token}`;
+  if (o.type) headers["Content-Type"] = o.type;
+  return SELF.fetch(`${BASE}/api/att/${id}?kind=${kind}`, { method: o.method ?? (o.body ? "PUT" : "GET"), headers, body: o.body });
+}
+
+describe("attachments", () => {
+  it("upload → download roundtrip (full + thumb), headers, idempotent retry, usage", async () => {
+    const { a, b } = await pairUp();
+    const full = webp(900), thumb = jpeg(120);
+    let r = await att("img_0001abcd", "full", { token: a, type: "image/webp", body: full });
+    expect(r.status).toBe(200);
+    expect((await r.json() as any).bytes).toBe(900);
+    r = await att("img_0001abcd", "thumb", { token: a, type: "image/jpeg", body: thumb });
+    expect(r.status).toBe(200);
+    // retry of the same id: acked, not stored twice (no R2 write, usage unchanged)
+    r = await att("img_0001abcd", "full", { token: a, type: "image/webp", body: full });
+    expect(r.status).toBe(200);
+    expect((await r.json() as any).existed).toBe(true);
+
+    // the partner's device reads it back
+    r = await att("img_0001abcd", "full", { token: b });
+    expect(r.status).toBe(200);
+    expect(r.headers.get("Content-Type")).toBe("image/webp");
+    expect(r.headers.get("Cache-Control")).toBe("private, max-age=31536000, immutable");
+    expect(r.headers.get("X-Content-Type-Options")).toBe("nosniff");
+    expect(r.headers.get("Content-Disposition")).toBe("inline");
+    expect(new Uint8Array(await r.arrayBuffer())).toEqual(full);
+    r = await att("img_0001abcd", "thumb", { token: b });
+    expect(r.status).toBe(200);
+    expect(new Uint8Array(await r.arrayBuffer())).toEqual(thumb);
+
+    // R2 object carries the uploader's metadata
+    const obj = await env.ATT.head("att/img_0001abcd/full");
+    expect(obj?.customMetadata).toMatchObject({ slot: "A", size: "900", type: "image/webp" });
+
+    // never uploaded → 404 (answered by the DO index, no R2 read)
+    r = await att("img_missing1", "full", { token: b });
+    expect(r.status).toBe(404);
+
+    const u = await api("/api/usage", { token: a });
+    expect(u.status).toBe(200);
+    expect(u.body).toMatchObject({ bytes: 1020, capBytes: 3000, monthPuts: 2, monthGets: 2 });
+  });
+
+  it("requires a token; pending devices are denied", async () => {
+    const a = await bootstrap();
+    let r = await att("img_0002abcd", "full", { type: "image/webp", body: webp() });
+    expect(r.status).toBe(401);
+    r = await att("img_0002abcd", "full", { token: "nope", type: "image/webp", body: webp() });
+    expect(r.status).toBe(401);
+    r = await att("img_0002abcd", "full");
+    expect(r.status).toBe(401);
+    const inv = await api("/api/invite", { method: "POST", token: a.token });
+    const red = await api("/api/redeem", { body: { key: inv.body.key, name: "Anwesha", device: "iPhone" } });
+    const pend = red.body.pendingToken as string;
+    r = await att("img_0002abcd", "full", { token: pend, type: "image/webp", body: webp() });
+    expect(r.status).toBe(403);
+    expect(await r.json()).toEqual({ error: "pending" });
+    expect((await att("img_0002abcd", "full", { token: a.token, type: "image/webp", body: webp() })).status).toBe(200);
+    expect((await att("img_0002abcd", "full", { token: pend })).status).toBe(403);
+    expect((await api("/api/usage", { token: pend })).status).toBe(403);
+  });
+
+  it("rejects wrong type, mismatched bytes, oversize, bad ids and bad origin", async () => {
+    const a = await bootstrap();
+    const t = a.token;
+    expect((await att("img_0003abcd", "full", { token: t, type: "image/svg+xml", body: webp() })).status).toBe(415);
+    expect((await att("img_0003abcd", "full", { token: t, type: "text/html", body: webp() })).status).toBe(415);
+    // declared webp but the bytes are a JPEG
+    expect((await att("img_0003abcd", "full", { token: t, type: "image/webp", body: jpeg() })).status).toBe(400);
+    expect((await att("img_0003abcd", "thumb", { token: t, type: "image/webp", body: webp(80 * 1024 + 1) })).status).toBe(413);
+    expect((await att("img_0003abcd", "full", { token: t, type: "image/webp", body: webp(Math.round(1.2 * 1024 * 1024) + 1) })).status).toBe(413);
+    expect((await att("short", "full", { token: t, type: "image/webp", body: webp() })).status).toBe(400);
+    expect((await att("img_0003abcd", "huge", { token: t, type: "image/webp", body: webp() })).status).toBe(400);
+    expect((await att("img_0003abcd", "full", { token: t, type: "image/webp", body: webp(), origin: "https://evil.example" })).status).toBe(403);
+    expect((await att("img_0003abcd", "full", { token: t, type: "image/webp", body: webp(), origin: null })).status).toBe(403);
+    // none of the refused uploads counted against storage
+    const u = await api("/api/usage", { token: t });
+    expect(u.body).toMatchObject({ bytes: 0, monthPuts: 0 });
+  });
+
+  it("free-tier guard: refuses uploads past the storage cap (507), per-device daily cap (429)", async () => {
+    const a = await bootstrap();
+    const t = a.token;
+    // cap is 3000 bytes in tests
+    expect((await att("cap_00000001", "full", { token: t, type: "image/webp", body: webp(1400) })).status).toBe(200);
+    expect((await att("cap_00000002", "full", { token: t, type: "image/webp", body: webp(1400) })).status).toBe(200);
+    const r = await att("cap_00000003", "full", { token: t, type: "image/webp", body: webp(1400) });
+    expect(r.status).toBe(507);
+    expect(await r.json()).toEqual({ error: "storage_full" });
+    // existing images stay readable
+    expect((await att("cap_00000001", "full", { token: t })).status).toBe(200);
+    const u = await api("/api/usage", { token: t });
+    expect(u.body).toMatchObject({ bytes: 2800, capBytes: 3000, monthPuts: 2 });
+    // daily cap (6 in tests): 2 used, 4 more small ones fit, the 7th is refused
+    for (let i = 0; i < 4; i++) expect((await att(`day_0000000${i}`, "thumb", { token: t, type: "image/jpeg", body: jpeg(20) })).status).toBe(200);
+    const d = await att("day_00000009", "thumb", { token: t, type: "image/jpeg", body: jpeg(20) });
+    expect(d.status).toBe(429);
+    expect(await d.json()).toEqual({ error: "daily_cap" });
   });
 });

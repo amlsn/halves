@@ -379,6 +379,161 @@ const HalvesSync = (() => {
     get outboxSize() { return st.outbox.length; },
     get synced() { return st.synced; },
     get persistRefused() { return persistRefused; },
-    _state: () => st, _shadow: () => sh, _drop: () => { if (ws) ws.close(); }, DB
+    _state: () => st, _shadow: () => sh, _drop: () => { if (ws) ws.close(); }, DB,
+    get token() { return cfg.token; }, get demo() { return cfg.demo; }, url: p => apiURL(p),
+    get started() { return started && !stopped; }
   };
+})();
+
+/* ---------- Image attachments: blob outbox + local image cache (TECH-DESIGN T15) ----------
+   Loaded at boot (rows need thumbnails, queued uploads must retry); the heavy compression lives in attach.js.
+   - IndexedDB 'halves-att', separate from the doc store: 'out' = blobs waiting to upload (key "<id>/<kind>"),
+     'img' = every image this phone has (own uploads + fetched ones). Ids are write-once, so cached copies are
+     kept for good: a repeat view never costs an R2 read, and viewing works offline.
+   - Uploads: PUT /api/att/<id>?kind=thumb|full (thumb first, so the partner's rows fill in sooner).
+     Retries follow T5a (after each attach, online, foreground, backoff 5s → 30s → 2m → 15m). Network / 5xx stay
+     silent (only the "sync in danger" rule surfaces them). A definite refusal (storage_full, too_large, bad_type,
+     daily_cap, auth) parks the item as failed and calls onFail(id, reason) once, so the app can ask the user.
+   - Downloads: fetch with the Authorization header → blob → object URL. 404 (partner's phone hasn't uploaded yet)
+     and read_quota are remembered for 30 s and never cached. */
+const HalvesAtt = (() => {
+  const BACKOFF = [5e3, 30e3, 120e3, 900e3];
+  const PERMANENT = {400: 'bad_image', 413: 'too_large', 415: 'bad_type', 507: 'storage_full'};
+  let dbp = null, busy = false, retryT = 0, fails = 0, failSince = 0, inited = false;
+  const urls = new Map(), miss = new Map(), loading = new Map();
+  let onFail = null, onChange = null;
+  const open = () => dbp || (dbp = new Promise((res, rej) => {
+    if (!self.indexedDB) return rej(new Error('no idb'));
+    const r = indexedDB.open('halves-att', 1);
+    r.onupgradeneeded = () => { r.result.createObjectStore('out'); r.result.createObjectStore('img'); };
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  }));
+  const tx = async (store, mode, fn) => {
+    const db = await open();
+    return new Promise((res, rej) => {
+      const t = db.transaction(store, mode), os = t.objectStore(store);
+      let out; const q = fn(os);
+      if (q) q.onsuccess = () => { out = q.result; };
+      t.oncomplete = () => res(out); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error);
+    });
+  };
+  const k = (id, kind) => id + '/' + kind;
+  const getRec = (store, key) => tx(store, 'readonly', os => os.get(key)).catch(() => undefined);
+  const putRec = (store, key, v) => tx(store, 'readwrite', os => os.put(v, key));
+  const delRec = (store, key) => tx(store, 'readwrite', os => os.delete(key)).catch(() => {});
+  const allOut = () => tx('out', 'readonly', os => os.getAll()).catch(() => []);
+
+  /** Queue a compressed image: {full:{blob,type}, thumb:{blob,type}}. The blobs are viewable at once. */
+  async function queue(id, img) {
+    const t = Date.now();
+    for (const kind of ['thumb', 'full']) {
+      const p = img[kind]; if (!p) continue;
+      await putRec('out', k(id, kind), {id, kind, type: p.type || p.blob.type, blob: p.blob, t, tries: 0, failed: null});
+      if (!urls.has(k(id, kind))) urls.set(k(id, kind), URL.createObjectURL(p.blob));
+    }
+    kick();
+  }
+  async function drain() {
+    if (busy || !HalvesSync.started || HalvesSync.demo || !HalvesSync.token) {
+      if (HalvesSync.demo) for (const r of await allOut()) { await putRec('img', k(r.id, r.kind), {blob: r.blob, at: Date.now()}); await delRec('out', k(r.id, r.kind)); }
+      return;
+    }
+    busy = true; clearTimeout(retryT);
+    try {
+      const list = (await allOut()).filter(r => !r.failed).sort((a, b) => (a.kind === 'thumb' ? 0 : 1) - (b.kind === 'thumb' ? 0 : 1) || a.t - b.t);
+      for (const r of list) {
+        let res;
+        try {
+          res = await fetch(HalvesSync.url('att/' + encodeURIComponent(r.id) + '?kind=' + r.kind), {
+            method: 'PUT', body: r.blob, cache: 'no-store', credentials: 'omit',
+            headers: {'content-type': r.type, authorization: 'Bearer ' + HalvesSync.token}});
+        } catch (e) { return transient(); }
+        let j = null; try { j = await res.json(); } catch (e) { return transient(); }   // captive Wi-Fi: not our JSON
+        if (res.ok) {
+          await putRec('img', k(r.id, r.kind), {blob: r.blob, at: Date.now()});
+          await delRec('out', k(r.id, r.kind));
+          continue;
+        }
+        const code = (j && j.error) || '';
+        const reason = PERMANENT[res.status] || (res.status === 429 && code === 'daily_cap' ? 'daily_cap' : res.status === 401 || (res.status === 403 && code !== 'bad_origin') ? 'auth' : null);
+        if (!reason) return transient();
+        await park(r, reason);
+      }
+      fails = 0; failSince = 0;
+    } finally { busy = false; }
+  }
+  /** A definite refusal: stop retrying this image (both sizes) and tell the app once. */
+  async function park(r, reason) {
+    for (const kind of ['thumb', 'full']) {
+      const x = await getRec('out', k(r.id, kind));
+      if (x && !x.failed) { x.failed = reason; await putRec('out', k(r.id, kind), x); }
+    }
+    onFail && onFail(r.id, reason);
+    onChange && onChange();
+  }
+  function transient() {
+    fails++; if (!failSince) failSince = Date.now();
+    clearTimeout(retryT); retryT = setTimeout(kick, BACKOFF[Math.min(fails - 1, BACKOFF.length - 1)]);
+  }
+  function kick() { drain().catch(() => transient()); }
+  /** User pressed Retry: un-park the image and try now. */
+  async function retry(id) {
+    for (const kind of ['thumb', 'full']) { const x = await getRec('out', k(id, kind)); if (x) { x.failed = null; x.tries = 0; await putRec('out', k(id, kind), x); } }
+    fails = 0; kick();
+  }
+  /** User removed the image before it uploaded: nothing left to send. (Uploaded objects stay: soft delete.) */
+  async function discard(id) { for (const kind of ['thumb', 'full']) await delRec('out', k(id, kind)); onChange && onChange(); }
+  /** {id: reason} for parked uploads, and the ids still waiting. */
+  async function status() {
+    const out = await allOut(), failed = {}, waiting = new Set();
+    for (const r of out) { if (r.failed) failed[r.id] = r.failed; else waiting.add(r.id); }
+    return {failed, waiting: [...waiting], oldest: out.length ? Math.min(...out.map(r => r.t)) : 0, fails};
+  }
+  /** T5a danger rule for images: oldest unsent > 24 h and ≥ 5 failed attempts. */
+  async function danger() {
+    if (HalvesSync.demo) return 0;
+    const s = await status();
+    return s.waiting.length && Date.now() - s.oldest > 864e5 && fails >= 5 ? s.waiting.length : 0;
+  }
+
+  /** Object URL for an image, or null if not available (yet). Cache → outbox → network (then cached for good). */
+  function url(id, kind) {
+    const key = k(id, kind);
+    if (urls.has(key)) return Promise.resolve(urls.get(key));
+    if (loading.has(key)) return loading.get(key);
+    const m = miss.get(key); if (m && Date.now() - m < 30e3) return Promise.resolve(null);
+    const p = (async () => {
+      const hit = (await getRec('img', key)) || (await getRec('out', key));
+      let blob = hit && hit.blob;
+      if (!blob && HalvesSync.token && !HalvesSync.demo && navigator.onLine !== false) {
+        try {
+          const r = await fetch(HalvesSync.url('att/' + encodeURIComponent(id) + '?kind=' + kind), {headers: {authorization: 'Bearer ' + HalvesSync.token}, credentials: 'omit'});
+          if (r.ok && /^image\//.test(r.headers.get('content-type') || '')) { blob = await r.blob(); putRec('img', key, {blob, at: Date.now()}).catch(() => {}); }
+        } catch (e) {}
+      }
+      if (!blob) { miss.set(key, Date.now()); return null; }
+      const u = URL.createObjectURL(blob); urls.set(key, u); return u;
+    })().finally(() => loading.delete(key));
+    loading.set(key, p);
+    return p;
+  }
+  /** Full-size URLs are big: let the viewer release them. */
+  function release(id, kind) { const key = k(id, kind), u = urls.get(key); if (u) { URL.revokeObjectURL(u); urls.delete(key); } }
+
+  function init(o = {}) {
+    onFail = o.onFail || onFail; onChange = o.onChange || onChange;
+    if (inited) return kick(); inited = true;
+    addEventListener('online', kick);
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') kick(); });
+    addEventListener('pageshow', kick); addEventListener('focus', kick);
+    kick();
+  }
+  async function wipe() {
+    for (const u of urls.values()) URL.revokeObjectURL(u); urls.clear(); miss.clear();
+    try { const db = await open(); db.close(); } catch (e) {}
+    dbp = null;
+    await new Promise(res => { try { const r = indexedDB.deleteDatabase('halves-att'); r.onsuccess = r.onerror = r.onblocked = res; } catch (e) { res(); } });
+  }
+  return {init, queue, kick, retry, discard, status, danger, url, release, wipe};
 })();

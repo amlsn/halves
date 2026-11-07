@@ -22,9 +22,26 @@ export const INVITE_TTL_MS = 24 * 60 * 60 * 1000;
 export const WS_AUTH_TIMEOUT_MS = 5000;
 export const RATE_LIMIT_PER_MIN = 10;
 const MAX_BODY_BYTES = 2 * 1024 * 1024;
+
+// ---------- attachments (TECH-DESIGN T15): R2 free-tier guards, all in one place ----------
+// R2 free tier: 10 GB-month storage, 1M Class A (PUT) / 10M Class B (GET) per month. We stop well short.
+export const ATT = {
+  CAP_BYTES: 1.5 * 1024 ** 3,      // 1.5 GB (user choice, well under the 10 GB free tier): refuse uploads past this (507 storage_full); env ATT_CAP_BYTES overrides
+  MONTH_PUTS: 500_000,             // refuse uploads once this calendar month's PUTs ≥ this (507 storage_full)
+  MONTH_GETS: 5_000_000,           // refuse R2 reads once this month's GETs ≥ this (429 read_quota); client serves from its cache
+  DAILY_PER_DEVICE: 200,           // uploads per device per UTC day (429 daily_cap); env ATT_DAILY_CAP overrides
+  MAX_FULL: Math.round(1.2 * 1024 * 1024),
+  MAX_THUMB: 80 * 1024,
+  TYPES: new Set(["image/webp", "image/jpeg", "image/png"]),
+  ID_RE: /^[A-Za-z0-9_-]{8,40}$/,
+} as const;
+export type AttResult =
+  | { ok: true; existed?: boolean; deviceId: string; slot: Slot }
+  | { ok: false; status: number; error: string };
+const monthKey = (t = Date.now()) => new Date(t).toISOString().slice(0, 7);
 const LAST_SEEN_THROTTLE_MS = 60_000;
 
-type Slot = "A" | "B";
+export type Slot = "A" | "B";
 type DeviceRow = {
   id: string;
   slot: Slot;
@@ -124,6 +141,13 @@ const MIGRATIONS: string[][] = [
     `CREATE TABLE IF NOT EXISTS ops (
        op_id TEXT PRIMARY KEY, version INTEGER NOT NULL, kind TEXT NOT NULL, id TEXT NOT NULL, at INTEGER NOT NULL)`,
   ],
+  // v2: attachment index (T15). The R2 object is the bytes; this row is what lets the Worker answer
+  // "exists?" / "how much is stored?" without spending R2 operations. meta.att_bytes = running total.
+  [
+    `CREATE TABLE IF NOT EXISTS att (
+       key TEXT PRIMARY KEY, bytes INTEGER NOT NULL, type TEXT NOT NULL, slot TEXT NOT NULL,
+       device TEXT NOT NULL, at INTEGER NOT NULL)`,
+  ],
 ];
 
 export class Pair extends DurableObject<Env> {
@@ -216,6 +240,7 @@ export class Pair extends DurableObject<Env> {
       if (method === "GET" && path === "/devices") return this.listDevices(dev);
       if (method === "POST" && path === "/revoke") return await this.revoke(req, dev);
       if (method === "POST" && path === "/sync") return await this.httpSync(req, dev);
+      if (method === "GET" && path === "/usage") return json(200, this.usage());
       return err(404, "not_found");
     } catch (e) {
       if (e instanceof BadRequest) return err(e.status, e.message);
@@ -525,6 +550,96 @@ export class Pair extends DurableObject<Env> {
     const seen = new Set(page.map((d) => `${d.kind}\u0000${d.id}`));
     for (const d of extra) if (!seen.has(`${d.kind}\u0000${d.id}`)) page.push(d);
     return { t: "changes", docs: page, cursor, more };
+  }
+
+  // ---------- attachments (T15): RPC from the Worker, which talks to R2 directly ----------
+  private capBytes(): number {
+    const v = Number(this.env.ATT_CAP_BYTES);
+    return Number.isFinite(v) && v > 0 ? v : ATT.CAP_BYTES;
+  }
+  private dailyCap(): number {
+    const v = Number(this.env.ATT_DAILY_CAP);
+    return Number.isFinite(v) && v > 0 ? v : ATT.DAILY_PER_DEVICE;
+  }
+  private attMonth(): { m: string; puts: number; gets: number } {
+    const raw = this.getMeta("att_month");
+    const st = raw ? (JSON.parse(raw) as { m: string; puts: number; gets: number }) : null;
+    const m = monthKey();
+    return st && st.m === m ? st : { m, puts: 0, gets: 0 };
+  }
+  private attBytes(): number {
+    return Number(this.getMeta("att_bytes") ?? "0");
+  }
+  usage() {
+    const mo = this.attMonth();
+    return { bytes: this.attBytes(), capBytes: this.capBytes(), monthPuts: mo.puts, monthGets: mo.gets,
+      maxMonthPuts: ATT.MONTH_PUTS, maxMonthGets: ATT.MONTH_GETS };
+  }
+  private async attDevice(token: string | null): Promise<AttResult> {
+    const dev = await this.deviceFromToken(token);
+    if (!dev) return { ok: false, status: 401, error: "unauthorized" };
+    if (dev.status !== "active") return { ok: false, status: 403, error: "pending" };
+    return { ok: true, deviceId: dev.id, slot: dev.slot };
+  }
+
+  /**
+   * Before a PUT reaches R2: auth (active device), idempotency (key already stored → existed, no R2 write),
+   * free-tier guards (stored bytes, month PUTs) and the per-device daily cap. Counts the PUT when allowed.
+   */
+  async attBeginPut(token: string | null, key: string, bytes: number): Promise<AttResult> {
+    const d = await this.attDevice(token);
+    if (!d.ok) return d;
+    if (this.sql.exec(`SELECT 1 FROM att WHERE key = ?`, key).toArray().length) return { ...d, existed: true };
+    const mo = this.attMonth();
+    if (this.attBytes() + bytes > this.capBytes() || mo.puts >= ATT.MONTH_PUTS) return { ok: false, status: 507, error: "storage_full" };
+    const day = Math.floor(Date.now() / 86_400_000);
+    const dk = `att_day:${d.deviceId}`;
+    const raw = this.getMeta(dk);
+    let ds = raw ? (JSON.parse(raw) as { d: number; n: number }) : { d: day, n: 0 };
+    if (ds.d !== day) ds = { d: day, n: 0 };
+    if (ds.n >= this.dailyCap()) return { ok: false, status: 429, error: "daily_cap" };
+    ds.n++;
+    mo.puts++;
+    this.ctx.storage.transactionSync(() => {
+      this.setMeta(dk, JSON.stringify(ds));
+      this.setMeta("att_month", JSON.stringify(mo));
+    });
+    return d;
+  }
+
+  /** After R2 accepted the object: index it and add its size to the running total. */
+  async attCommitPut(key: string, bytes: number, type: string, slot: Slot, deviceId: string): Promise<void> {
+    this.ctx.storage.transactionSync(() => {
+      if (this.sql.exec(`SELECT 1 FROM att WHERE key = ?`, key).toArray().length) return; // a racing retry got here first
+      this.sql.exec(`INSERT INTO att (key, bytes, type, slot, device, at) VALUES (?, ?, ?, ?, ?, ?)`,
+        key, bytes, type, slot, deviceId, Date.now());
+      this.setMeta("att_bytes", String(this.attBytes() + bytes));
+    });
+  }
+
+  /** Before a GET reaches R2: auth, existence (404 without an R2 op), month read guard. Counts the GET. */
+  async attBeginGet(token: string | null, key: string): Promise<AttResult> {
+    const d = await this.attDevice(token);
+    if (!d.ok) return d;
+    if (!this.sql.exec(`SELECT 1 FROM att WHERE key = ?`, key).toArray().length) return { ok: false, status: 404, error: "not_found" };
+    const mo = this.attMonth();
+    if (mo.gets >= ATT.MONTH_GETS) return { ok: false, status: 429, error: "read_quota" };
+    mo.gets++;
+    this.setMeta("att_month", JSON.stringify(mo));
+    return d;
+  }
+
+  /**
+   * For the future cleanup alarm (T15): forget an object after it was deleted from R2, keeping the total right.
+   * Nothing calls this yet: deleting an expense keeps its images (Undo), see TECH-DESIGN T15 "Later".
+   */
+  async attForget(key: string): Promise<void> {
+    this.ctx.storage.transactionSync(() => {
+      const row = this.sql.exec<{ bytes: number }>(`SELECT bytes FROM att WHERE key = ?`, key).toArray()[0];
+      if (!row) return;
+      this.sql.exec(`DELETE FROM att WHERE key = ?`, key);
+      this.setMeta("att_bytes", String(Math.max(0, this.attBytes() - row.bytes)));
+    });
   }
 
   // ---------- WebSocket (Hibernation API) ----------

@@ -229,19 +229,75 @@ Security details (hashed tokens, Origin checks, WS auth timeout, rate limits) ar
 
 V3 visual work (DESIGN §9.11) runs alongside M1–M3 as skin CSS. It doesn't block any milestone.
 
-## T15. Attachments: screenshots, receipts (proposed 2026-11-07, not built)
-- **The client compresses before upload, with text clarity first:**
-  - **Screenshots** (PNG in, flat colours): keep the native resolution, capped at 2400 px on the long edge, and encode as **lossless or near-lossless WebP**. That gives crisp text at ~100–300 KB.
-  - **Photos** (receipts, bills): cap at 2000 px and encode as **WebP q≈80**, which avoids JPEG's ringing around text. An optional *Document* look (greyscale + contrast) gets them to ~80–150 KB.
-  - **Hard cap of 1 MB**: step the quality down until it fits. A 320 px thumbnail is generated for list rows. EXIF/GPS metadata is stripped by the re-encode.
-  - Safari can't reliably encode WebP from a canvas, so iOS uses a small lazy-loaded WASM encoder (only fetched when you attach something), with JPEG q≈88 as the fallback.
-- **Upload:**
-  - `PUT /api/att/<id>` (device token), served back only through the authenticated API. There are never public URLs.
-  - The expense syncs at once with a placeholder, and the image waits in the IndexedDB outbox when offline (T5a).
-- **Storage options:**
-  - **A. R2**: 10 GB free, egress free. R2 is **not enabled on this account yet** (`wrangler r2 bucket list` → code 10042); enabling it in the dashboard needs a payment method on file, though usage stays $0 under the free limits. It's a separate failure domain from the data.
-  - **B. Inside the Pair DO's SQLite**: chunked blobs (values ≤ 2 MB). No card needed, but it counts toward the free **5 GB total** DO storage, and backups get bigger. Can be migrated to R2 later.
-- **Budget:** ~10 images/day × ~250 KB ≈ 2.5 MB/day ≈ **0.9 GB/year**. Request and row-write counts are negligible (tens per day against 100k).
+## T15. Attachments: screenshots, receipts (built (local); R2 bucket enabled, not deployed yet, 2026-11-07)
+Status: built and tested locally (`npm test` 21/21; `wrangler dev` with simulated R2, two devices). The bucket `halves-attachments` now exists (private, r2.dev off); **not deployed yet**. Storage option A (R2) was chosen.
+
+**Data:** an expense gets `att: [{id, w, h, bytes, type}]` (max 5). It is a plain synced field, merged like any other (B1), and it is not a person field. `id` is client-random, `i` + 15 base-36 characters (the server accepts `[A-Za-z0-9_-]{8,40}`). It is **write-once**: the bytes behind an id never change, so every cache may keep them forever.
+
+**Client compression** (`app/attach.js`, an ES module lazy-loaded on the first Attach tap and precached by `sw.js`):
+- Decoding uses `createImageBitmap(file, {imageOrientation:'from-image'})`, falling back to `<img>`. Re-encoding from pixels strips EXIF/GPS.
+- **Screenshot vs photo:** it's a screenshot if the input is PNG, or the dimensions match a common device screen (either orientation), or the image has few colours: fewer than 300 distinct 4-bit colours on a 64 px downsample, or the top 8 colours covering more than 60%.
+- **Screenshots:** capped at 2400 px on the long edge. The ladder is lossless WebP → q 0.9 → 0.8 → 0.72 → 0.64.
+- **Photos:** capped at 2000 px. The ladder is q 0.8 → 0.72 → 0.64 → 0.56.
+- Anything still over 1 MB is shrunk to 85% and tried again, up to 6 rounds. Downscaling halves in steps so text stays sharp. Transparency is flattened onto white.
+- **Thumbnail:** 320 px long edge, WebP ≤ 80 KB.
+- **Encoder:**
+  - The canvas, if `toBlob('image/webp')` really returns WebP (Chrome treats q = 1 as lossless).
+  - Otherwise (Safari) the vendored **@jsquash/webp 1.5.0** WASM (`app/vendor/jsquash-webp/`, Apache-2.0 + libwebp BSD; SIMD build when supported). It runs in a module worker (`app/attach-enc.js`) so typing never freezes. In Safari mode lossless means near-lossless 60. The ~300 KB of WASM is cached on first use.
+  - Otherwise JPEG q 0.88.
+- Measured on desktop Chrome with a 1290×2796 PNG and a 4032×3024 9 MB JPEG:
+  - canvas path: 717 KB lossless / 311 KB in 0.5 s total
+  - forced-WASM path: 218 KB near-lossless / 381 KB
+- **UI:**
+  - The Add sheet and the expense detail get an **Attach** chip/tile. It's an `<input type=file accept="image/*" multiple>` with no `capture`, so phones offer both camera and library.
+  - The strip shows "Compressing…", then the thumbnail plus a "8.9 MB → 311 KB" note. Amount → save is untouched: an image still compressing when you save lands on the saved expense when it's done. Closing the sheet without saving discards its new images.
+  - Rows show a 36 px thumbnail (+ a count) only when images are present.
+  - Tapping a thumbnail opens a full-screen viewer: thumbnail first, then the full image. Pinch, wheel or double-tap zooms; drag pans; prev/next; it pushes a history entry, so **Back closes it**.
+  - Removing an image is soft: it is dropped from `att`, with Undo.
+
+**Upload outbox + cache** (`HalvesAtt` in `app/sync.js`, loaded at boot):
+- A separate IndexedDB `halves-att`:
+  - `out`: blobs waiting to upload
+  - `img`: every image this phone has, kept for good. Repeat views and offline views never touch R2.
+- The expense op syncs at once with the `att` metadata. The partner sees a blank tile until the bytes arrive (a 404 is retried after 30 s).
+- Uploads go thumbnail first, with the T5a triggers (after attach, `online`, foreground/focus/pageshow, backoff 5 s → 30 s → 2 m → 15 m).
+- **Network errors, 5xx and captive Wi-Fi retry silently.** They surface only through the T5a danger rule ("N images are only on this phone").
+- **A definite refusal stops retrying that image** and opens the app's own sheet, titled **"Image upload failed"**, with a plain reason and actions:
+  - Reasons: `storage_full` "Image storage is full (1.5 GB limit)", `too_large`, `bad_type`/`bad_image`, `daily_cap` "200 images for today", `auth`.
+  - Actions: **Retry** (where retryable), **Remove image**, **OK**.
+  - The sheet never covers another sheet (it's queued until sheets close). The expense always stays saved. The detail sheet marks a parked image "Not uploaded" with Retry.
+  - Compression failures (too large after every step, unreadable file) show inline in the strip, since that image never got attached.
+- Signing out wipes `halves-att` too.
+- `sw.js` still never intercepts `/api/*`.
+
+**Server** (Worker `attRoute` in `worker/src/index.ts` + Pair DO RPC in `worker/src/pair.ts`):
+- `PUT /api/att/<id>?kind=full|thumb`
+  - Device token required; pending → 403. Origin is checked like every write.
+  - Content-Type must be `image/webp|jpeg|png` (else 415), and the magic bytes must match it (else 400).
+  - Size ≤ 1.2 MiB full / 80 KiB thumb (else 413).
+  - The Worker reads the bytes (capped), then calls `Pair.attBeginPut` (auth, idempotency, guards, daily cap), writes R2 key `att/<id>/<kind>` with customMetadata `{slot, device, size, type, at}`, then `Pair.attCommitPut` indexes it.
+  - A retry of a stored id → `200 {existed:true}`, with no R2 write.
+- `GET /api/att/<id>?kind=…`
+  - Active device only. `Pair.attBeginGet` answers "missing" (404) from its index without an R2 read.
+  - Streams with `Cache-Control: private, max-age=31536000, immutable`, `nosniff`, `Content-Disposition: inline` and CSP `default-src 'none'`.
+- `GET /api/usage` → `{bytes, capBytes, monthPuts, monthGets, maxMonthPuts, maxMonthGets}`. Settings shows "Images: X of 1.5 GB used", plus a warning line at ≥ 75% (≈ 1.1 GB).
+- DO schema v2: table `att(key, bytes, type, slot, device, at)`. `meta.att_bytes` = running total, `meta.att_month` = `{m, puts, gets}` (UTC calendar month), `meta.att_day:<deviceId>` = daily count.
+
+**R2 free-tier guards** (the free tier is 10 GB-month storage, 1M Class A / 10M Class B per month; constants in `ATT` in `pair.ts`):
+| Guard | Limit | Response |
+|---|---|---|
+| Stored bytes | **1.5 GB** (user choice; env `ATT_CAP_BYTES` overrides, the tests use 3000) | upload refused `507 {error:"storage_full"}` once stored + new > cap |
+| PUTs this month | 500k | `507 storage_full` |
+| GETs reaching R2 this month | 5M | `429 read_quota`; the client keeps showing cached copies |
+| Uploads per device per UTC day | 200 (env `ATT_DAILY_CAP`; the tests use 6) | `429 daily_cap` |
+- In the Add sheet a known-full store turns the chip into "Image storage full". The expense still saves.
+- `Pair.attForget(key)` subtracts bytes for the future cleanup (below).
+
+**Later:**
+- **Cleanup alarm:** a DO alarm that deletes R2 objects whose id is no longer referenced by any live expense for 30 days (deleted expenses keep their images so Undo works), then calls `attForget`. Until then there is no DELETE route; the storage cap bounds the leak.
+- Optional *Document* look for photos (greyscale + contrast).
+- The local `img` cache is unbounded (≈ 250 KB per full image); add LRU pruning if phones complain.
+- **Before deploy:** nothing else is needed. The bucket exists, and the binding `ATT` is in `wrangler.jsonc`.
 
 ## B1. First build: contract (2026-11-07)
 Scope picked by the user: **logging + sync + security**, all five skins, at **`halves.amlanandanwesha.com`**. Targets/Trends UI ships as-is from V2 (data synced), with polish later.
@@ -272,6 +328,8 @@ Scope picked by the user: **logging + sync + security**, all five skins, at **`h
 | `GET /api/me` | device or pending token | `{status: active/pending, slot, names, deviceId}` |
 | `GET /api/devices`, `POST /api/revoke {deviceId}` | device | Settings → Devices |
 | `POST /api/sync` `{since, ops[]}` | device | HTTP fallback, same semantics as the WS |
+| `PUT/GET /api/att/<id>?kind=full\|thumb` | device (active) | image bytes in R2 (T15) |
+| `GET /api/usage` | device (active) | image storage + monthly R2 op counters (T15) |
 
 **WebSocket** `/api/ws`:
 - The first message is `{t:"auth", token}`. With no auth within 5 s the socket is closed.
@@ -298,6 +356,7 @@ Scope picked by the user: **logging + sync + security**, all five skins, at **`h
 | 7 | Access | ✅ device token + approval by an existing device for new devices; a Face ID lock comes later (T7a) |
 
 ## Changelog
+- 2026-11-07 v1.4: T15 attachments built locally: R2 binding, PUT/GET /api/att, /api/usage, free-tier guards (1.5 GB cap), client compression + outbox + viewer, upload-failed sheet.
 - 2026-11-07 v1.3: B1 first-build contract (vanilla client, JSON docs, bootstrap secret).
 - 2026-11-07 v1.2: T7a security layers + domain moved to amlanandanwesha.com (subdomain).
 - 2026-11-07 v1.1: T5a: invisible sync with retry triggers and the "sync in danger" rule.

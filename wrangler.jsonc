@@ -21,6 +21,10 @@
     "bindings": [{ "name": "PAIR", "class_name": "Pair" }]
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Pair"] }],
+  // Expense image attachments (TECH-DESIGN T15). Private bucket: no public access, no custom domain;
+  // objects are only ever served through GET /api/att/<id> after the device token is checked by the Pair DO.
+  // Keys: att/<id>/full, att/<id>/thumb. R2 must be enabled on the account before the first deploy.
+  "r2_buckets": [{ "binding": "ATT", "bucket_name": "halves-attachments" }],
   "vars": {
     // Writes and WS upgrades must come from this Origin (or the same host as the request, for local/LAN dev).
     "APP_ORIGIN": "https://halves.amlanandanwesha.com"
