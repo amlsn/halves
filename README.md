@@ -52,7 +52,11 @@ Prototype tips: system/browser Back goes up a folder (and closes sheets) · long
 
 ## Live (first build, deployed 2026-11-07)
 - URL: https://halves.amlanandanwesha.com (Worker `halves`, Custom Domain; the wedding site at the apex is untouched).
-- Deploy: `npx wrangler deploy`. **Bump `VERSION` in `app/sw.js` on every deploy.** Local: `cp .dev.vars.example .dev.vars && npm run dev`; tests: `npm test`.
+- Deploy: **`npm run deploy`** (`scripts/deploy.sh`). It refuses uncommitted changes, runs the tests, and stamps a unique service-worker VERSION automatically. Don't run a bare `wrangler deploy`.
+- **Update rules** (so live phones never break):
+  - DB changes are only new, append-only steps in `MIGRATIONS` (`worker/src/pair.ts`).
+  - The server must accept messages from the previous app version, since a phone may run old code until it reopens.
+  - New fields are optional, and fields are never renamed in place. Local: `cp .dev.vars.example .dev.vars && npm run dev`; tests: `npm test`.
 - One-time setup link: `.prod-setup-link.local` (gitignored, chmod 600). It stops working once the pair exists. Rotate with `npx wrangler secret put BOOTSTRAP_SECRET`.
 - Pairing: Settings → Invite → WhatsApp link → approve on the paired phone (TECH-DESIGN T7/T7a, B1).
 - Known gaps: per-IP rate limit and Turnstile not built; the ops log is never trimmed; the server doesn't check expense rules; no nightly backup yet (T11); no Android Background Sync.
