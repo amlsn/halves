@@ -1,0 +1,32 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "halves",
+  "main": "worker/src/index.ts",
+  "compatibility_date": "2026-10-01",
+  // Static app shell served straight from the edge (free, no Worker invocation).
+  // Only /api/* runs the Worker. Hash routing in the app, so no SPA fallback.
+  // NOTE: asset responses never pass through the Worker, so their security headers
+  // (noindex, nosniff, no-referrer) must come from app/_headers.
+  "assets": {
+    "directory": "./app",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+  // Own Custom Domain (TECH-DESIGN T7a): isolated storage from the wedding site.
+  "routes": [{ "pattern": "halves.amlanandanwesha.com", "custom_domain": true }],
+  "workers_dev": false,
+  "preview_urls": false,
+  // One Pair DO for now ("pair-main"). SQLite backend = the only DO storage on Workers Free.
+  "durable_objects": {
+    "bindings": [{ "name": "PAIR", "class_name": "Pair" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Pair"] }],
+  "vars": {
+    // Writes and WS upgrades must come from this Origin (or the same host as the request, for local/LAN dev).
+    "APP_ORIGIN": "https://halves.amlanandanwesha.com"
+  },
+  "observability": { "enabled": true }
+  // Secret (not in this file): BOOTSTRAP_SECRET
+  //   prod:  npx wrangler secret put BOOTSTRAP_SECRET   (in a normal terminal)
+  //   local: .dev.vars (copy .dev.vars.example)
+}

@@ -1,0 +1,227 @@
+/* Halves V2 · exploration skin "art": classical + psychedelic (DESIGN.md §9.10 "Art skin").
+   Every rule is scoped to html[data-skin="art"]. art.js injects fonts, generates the original SVG art (great wave, swirl star,
+   spiral halo, dial swirl) and the impasto textures as CSS vars (--art-tex-*, --art-page-*, --art-crest-*, --art-brush-edge).
+   Light = aged paper + Prussian-blue ink; Dark = starry night (deep navy + chrome-yellow).
+   Psychedelic colour (--psy1..5) is used sparingly: the page-title swash, the FAB rim, the active page dot, the dial "commit" state.
+   Texture rule: textures sit behind content (::before / z-index:-1), masked away from text, ≤16% opacity on cards;
+   the hero/Today wave is tonal (blue on blue), foam stays top-right, and hero text gets a halo scrim + a solid footer strip. */
+
+/* ============ Tokens: light (paper + Prussian blue) ============ */
+html[data-skin="art"]{
+  --font-ui:"DM Sans",system-ui,sans-serif; --font-display:"Fraunces","Iowan Old Style",Georgia,serif; --font-num:"DM Sans",system-ui,sans-serif;
+  --bg:#F1E9D8; --surface:#FBF6EA; --s1:#F3ECDC; --s2:#E6DCC6; --s3:#D8CBB0;
+  --text:#172238; --muted:#4F566A; --outline:#C9BC9F;
+  --primary:#1F4673; --on-primary:#FBF6EA; --primary-c:#D6E2EE; --on-primary-c:#10243F;
+  --you:#1F4E8C; --you-c:#D3E0F0; --you-t:#1E4A85; --sam:#B8642A; --sam-c:#F3D9BF; --sam-t:#8A4310;
+  --coral:#F4D3C4; --on-coral:#4A1A0B; --teal:#CBE3E0; --on-teal:#0E3532; --lilac:#E1D6EC; --on-lilac:#2E1A47;
+  --sun:#F5E1A4; --on-sun:#3A2A00; --sage:#DCE5C8; --on-sage:#1E2B0E; --sky:#D4E1EE; --on-sky:#10283F;
+  --good:#2F6A45; --good-c:#D9E9D5; --warn:#7E5200; --warn-c:#F6E2A8; --bad:#A3263A; --bad-c:#F6D5D6;
+  --scrim:rgba(23,34,56,.42); --shadow:0 6px 22px rgba(23,34,56,.13);
+  --r-xl:26px; --r-l:18px; --r-m:12px;
+  color-scheme:light;
+  /* art-only */
+  --psy1:#C8326E; --psy2:#E9853A; --psy3:#F2C14E; --psy4:#2BA39A; --psy5:#6B4FA0;
+  --art-hero:#183358; --art-hero-on:#F4ECDC; --art-over:#5A1A27; --art-strip:#11284A; --art-strip-over:#47121E;
+  --art-tex:var(--art-tex-l); --art-page:var(--art-page-l); --art-crest:var(--art-crest-l); --art-tex-op:.15;
+  --ah0:#1F4673; --ah1:#D9A441; --ah2:#3D6FA8; --art-dial:#14284A;
+}
+/* ============ Tokens: dark (starry night) — explicit + system ============ */
+html[data-skin="art"][data-theme="dark"]{
+  --bg:#0D1322; --surface:#151D31; --s1:#1A2339; --s2:#232E49; --s3:#2D3B5A;
+  --text:#EFE7D4; --muted:#B5B9C9; --outline:#3A4766;
+  --primary:#F2C14E; --on-primary:#1A1400; --primary-c:#2F3F66; --on-primary-c:#E6ECFA;
+  --you:#6E9BDB; --you-c:#1F3558; --you-t:#9DBDF0; --sam:#E39A5B; --sam-c:#4A2A12; --sam-t:#F2B583;
+  --coral:#4D2418; --on-coral:#F8D8CB; --teal:#12403C; --on-teal:#BFE8E2; --lilac:#34264F; --on-lilac:#E3D7F5;
+  --sun:#4A3A08; --on-sun:#F7E3A4; --sage:#26381A; --on-sage:#DCE8C8; --sky:#1C3554; --on-sky:#D3E3F6;
+  --good:#8FD6A0; --good-c:#173826; --warn:#F2C46B; --warn-c:#3F2E05; --bad:#FF9AA8; --bad-c:#4C1622;
+  --scrim:rgba(0,0,0,.58); --shadow:0 8px 26px rgba(0,0,0,.45); color-scheme:dark;
+  --art-hero:#1A3460; --art-over:#5A1B2A; --art-strip:#132749; --art-strip-over:#461320;
+  --art-tex:var(--art-tex-d); --art-page:var(--art-page-d); --art-crest:var(--art-crest-d); --art-tex-op:.17;
+  --ah0:#F4ECDC; --ah1:#F2C14E; --ah2:#8DB3E8; --art-dial:#101F3C;
+}
+@media (prefers-color-scheme:dark){html[data-skin="art"]:not([data-theme="light"]){
+  --bg:#0D1322; --surface:#151D31; --s1:#1A2339; --s2:#232E49; --s3:#2D3B5A;
+  --text:#EFE7D4; --muted:#B5B9C9; --outline:#3A4766;
+  --primary:#F2C14E; --on-primary:#1A1400; --primary-c:#2F3F66; --on-primary-c:#E6ECFA;
+  --you:#6E9BDB; --you-c:#1F3558; --you-t:#9DBDF0; --sam:#E39A5B; --sam-c:#4A2A12; --sam-t:#F2B583;
+  --coral:#4D2418; --on-coral:#F8D8CB; --teal:#12403C; --on-teal:#BFE8E2; --lilac:#34264F; --on-lilac:#E3D7F5;
+  --sun:#4A3A08; --on-sun:#F7E3A4; --sage:#26381A; --on-sage:#DCE8C8; --sky:#1C3554; --on-sky:#D3E3F6;
+  --good:#8FD6A0; --good-c:#173826; --warn:#F2C46B; --warn-c:#3F2E05; --bad:#FF9AA8; --bad-c:#4C1622;
+  --scrim:rgba(0,0,0,.58); --shadow:0 8px 26px rgba(0,0,0,.45); color-scheme:dark;
+  --art-hero:#1A3460; --art-over:#5A1B2A; --art-strip:#132749; --art-strip-over:#461320;
+  --art-tex:var(--art-tex-d); --art-page:var(--art-page-d); --art-crest:var(--art-crest-d); --art-tex-op:.17;
+  --ah0:#F4ECDC; --ah1:#F2C14E; --ah2:#8DB3E8; --art-dial:#101F3C;
+}}
+@property --art-ang{syntax:"<angle>";inherits:false;initial-value:0deg}
+
+/* ============ Page, type ============ */
+html[data-skin="art"] body{background:var(--art-page,none) 0 0/320px 320px,var(--bg)}
+html[data-skin="art"] .topbar .brand{font-family:var(--font-display);font-style:italic;font-weight:600;font-size:23px;
+  font-variation-settings:"wght" 600,"opsz" 48,"SOFT" 100,"WONK" 1;letter-spacing:0}
+html[data-skin="art"] :is(.ptitle,.fhead h1,.sheet h3,.nudge-f h2){font-family:var(--font-display);letter-spacing:-.01em;
+  font-variation-settings:"wght" 620,"opsz" 96,"SOFT" 100,"WONK" 1}
+html[data-skin="art"] :is(.hero .amt,.today .big,.det-hero .v){font-variation-settings:"wght" var(--w,600),"opsz" 144,"SOFT" 60;letter-spacing:-.01em}
+html[data-skin="art"] :is(.tgt-card .big,.drill-sum b.num){font-family:var(--font-display);font-variation-settings:"wght" 640,"opsz" 72,"SOFT" 60}
+/* psychedelic swash under page titles (the one flowing-colour moment on a page) */
+html[data-skin="art"] .ptitle::after{content:"";display:block;width:58px;height:4px;margin-top:6px;border-radius:3px 1px 3px 1px;
+  background:linear-gradient(90deg,var(--psy1),var(--psy2),var(--psy3),var(--psy4),var(--psy5),var(--psy1)) 0 0/300% 100%;
+  animation:art-flow 14s linear infinite}
+@keyframes art-flow{to{background-position:300% 0}}
+html[data-skin="art"] .chip{border-radius:14px 7px 14px 7px}
+html[data-skin="art"] .pdot[aria-current="true"]::before{background:linear-gradient(90deg,var(--psy1),var(--psy2),var(--psy3))}
+
+/* ============ FAB: Prussian (gold at night) with a slow psychedelic rim ============ */
+html[data-skin="art"] .fab{background:radial-gradient(closest-side,var(--primary) 82%,transparent 84%),
+  conic-gradient(from var(--art-ang),var(--psy1),var(--psy2),var(--psy3),var(--psy4),var(--psy5),var(--psy1));
+  animation:art-rot 18s steps(180) infinite}
+@keyframes art-rot{to{--art-ang:360deg}}
+
+/* ============ Hero + Trends "Today": the great wave ============ */
+html[data-skin="art"] :is(.hero,.today){--hero-bg:var(--art-hero);--hero-on:var(--art-hero-on);background:var(--hero-bg);color:var(--hero-on);
+  --text:var(--art-hero-on);--muted:#C9D3E6;--primary:#F2C14E;--on-primary:#1A1400;--good:#9FDDB0;--warn:#F5CB6B;--bad:#FFA3AE;
+  --ah0:#F4ECDC;--ah1:#F2C14E;--ah2:#8DB3E8;--art-strip-c:var(--art-strip);
+  position:relative;isolation:isolate;box-shadow:var(--shadow),inset 0 0 0 1px rgba(244,236,220,.08)}
+html[data-skin="art"] :is(.hero.over,.today.over){--hero-bg:var(--art-over);--art-strip-c:var(--art-strip-over)}
+html[data-skin="art"] .hero .blob{display:none}
+html[data-skin="art"] .ornament{display:block;position:absolute;z-index:-1;pointer-events:none}
+/* hero: wave sits bottom-right on top of the footer strip, crest clear of the big number; Today: top-right, below the star */
+html[data-skin="art"] :is(.hero .ornament[data-slot="hero"],.today .ornament[data-slot="today"]){aspect-ratio:3/2;
+  -webkit-mask-image:linear-gradient(100deg,transparent 4%,#000 40%);mask-image:linear-gradient(100deg,transparent 4%,#000 40%)}
+html[data-skin="art"] .hero .ornament[data-slot="hero"]{right:-4px;bottom:58px;width:clamp(160px,46%,380px)}
+html[data-skin="art"] .today .ornament[data-slot="today"]{right:-4px;top:38px;width:clamp(150px,42%,330px)}
+/* halo scrim: hero text keeps its own background colour around each glyph, so the tonal wave never eats a letter */
+html[data-skin="art"] :is(.hero .lbl,.hero .amt,.hero .of,.hero .pace,.today .lbl,.today .big,.today .row,.today small){
+  text-shadow:0 0 2px var(--hero-bg),0 0 6px var(--hero-bg),0 0 12px var(--hero-bg)}
+/* solid footer strip ("sea floor") under the owe line + solid pills for the secondary rows */
+html[data-skin="art"] .hero-owe{position:relative;margin:16px -22px -18px;padding:12px 22px 16px;border-top:0;background:var(--art-strip-c)}
+html[data-skin="art"] .hero-tgt{position:relative;background:var(--art-strip-c)}
+html[data-skin="art"] .hero-sub{position:relative}
+html[data-skin="art"] .hero .sortq{background:var(--art-strip-c)}
+html[data-skin="art"] .today .stpill{background:#F4ECDC;color:#173257}
+html[data-skin="art"] .today .stpill.over{background:#FFD9DE;color:#7A1426}
+html[data-skin="art"] .today .stpill.warn{background:#F7E2A6;color:#4A3300}
+
+html[data-skin="art"] .art-wave{display:block;width:100%;height:100%;overflow:visible}
+html[data-skin="art"] .art-wave{--aw-body:#25497D;--aw-deep:#1D3E6C;--aw-line:#4B78AE;--aw-foam:#F4ECDC;--aw-far:#2B5287}
+html[data-skin="art"] :is(.hero.over,.today.over) .art-wave{--aw-body:#7A2B3A;--aw-deep:#692232;--aw-line:#A04A5A;--aw-far:#713040}
+html[data-skin="art"] .aw-body{fill:var(--aw-body)}
+html[data-skin="art"] .aw-deep{fill:var(--aw-deep)}
+html[data-skin="art"] .aw-farb{fill:var(--aw-far)}
+html[data-skin="art"] .aw-lines path{fill:none;stroke:var(--aw-line);stroke-width:1.5;stroke-linecap:round;opacity:.85}
+html[data-skin="art"] :is(.aw-foam,.aw-spray circle){fill:var(--aw-foam)}
+html[data-skin="art"] .aw-farf{fill:none;stroke:var(--aw-foam);stroke-width:1.6;stroke-linecap:round;opacity:.7}
+html[data-skin="art"] .aw-main{transform-origin:200px 160px;animation:aw-roll 11s ease-in-out infinite alternate}
+html[data-skin="art"] .aw-claws{transform-origin:108px 46px;animation:aw-claw 3.4s ease-in-out infinite alternate}
+html[data-skin="art"] .aw-far{animation:aw-drift 14s ease-in-out infinite alternate}
+html[data-skin="art"] .aw-front{animation:aw-drift2 8s ease-in-out infinite alternate}
+html[data-skin="art"] .aw-spray{animation:aw-spray 3.4s ease-in-out infinite alternate}
+@keyframes aw-roll{to{transform:translate(-7px,3px) rotate(-1.6deg)}}
+@keyframes aw-claw{from{transform:rotate(-2deg) scale(.97)}to{transform:rotate(2.5deg) scale(1.04)}}
+@keyframes aw-drift{to{transform:translate(10px,1px)}}
+@keyframes aw-drift2{to{transform:translate(-9px,0)}}
+@keyframes aw-spray{from{transform:translate(0,0);opacity:.55}to{transform:translate(-3px,-4px);opacity:1}}
+
+/* ============ Mascot: a swirling star (crescent moon when sleepy) ============ */
+html[data-skin="art"] .mascot{display:block}
+html[data-skin="art"] :is(.hero,.today) .mascot{--mascot-size:46px;top:12px;right:12px}
+html[data-skin="art"] .nf-in .mascot{--mascot-size:120px;position:relative;z-index:1}
+html[data-skin="art"] .nudge-b{--ah0:#F4ECDC;--ah1:#F2C14E;--ah2:#8DB3E8}
+html[data-skin="art"][data-theme="dark"] .nudge-b{--ah0:#172238;--ah1:#B07A12;--ah2:#1F4673}
+@media (prefers-color-scheme:dark){html[data-skin="art"]:not([data-theme="light"]) .nudge-b{--ah0:#172238;--ah1:#B07A12;--ah2:#1F4673}}
+html[data-skin="art"] :is(.art-star,.art-halo){display:block;width:100%;height:100%;overflow:visible}
+html[data-skin="art"] .ah-0{stroke:var(--ah0)} html[data-skin="art"] .ah-1{stroke:var(--ah1)} html[data-skin="art"] .ah-2{stroke:var(--ah2)}
+html[data-skin="art"] .as-core{fill:#F2C14E} html[data-skin="art"] .as-hi{fill:#FFF3C9}
+html[data-skin="art"] .as-moon{fill:#F2C14E;display:none}
+html[data-skin="art"] .as-rays{stroke:#F2C14E;stroke-width:3;display:none}
+html[data-skin="art"] .as-halo{transform-origin:50px 50px;animation:as-spin 40s linear infinite}
+html[data-skin="art"] .mascot[data-mood="happy"] .as-halo{animation-duration:16s}
+html[data-skin="art"] .mascot[data-mood="worried"] :is(.ah-1){stroke:#E9853A}
+html[data-skin="art"] .mascot[data-mood="worried"] .as-core{fill:#E9853A}
+html[data-skin="art"] .mascot[data-mood="worried"] .as-halo{animation:as-spin 7s linear infinite reverse}
+html[data-skin="art"] .mascot[data-mood="sleepy"] .as-sun{display:none}
+html[data-skin="art"] .mascot[data-mood="sleepy"] .as-moon{display:inline}
+html[data-skin="art"] .mascot[data-mood="sleepy"] .as-halo{opacity:.5;animation-duration:90s}
+html[data-skin="art"] .mascot[data-mood="cheer"] .as-rays{display:inline}
+html[data-skin="art"] .mascot[data-mood="cheer"] .art-star{animation:as-burst .9s var(--spring)}
+html[data-skin="art"] .mascot[data-mood="cheer"] .as-halo{animation-duration:3s}
+@keyframes as-spin{to{transform:rotate(360deg)}}
+@keyframes as-burst{from{transform:scale(.55) rotate(-120deg)}}
+
+/* ============ Spiral halo ornaments (folder header, empty states, full-screen nudge) ============ */
+html[data-skin="art"] :is(.fhead,.empty,.nf-in){isolation:isolate}
+html[data-skin="art"] .empty{position:relative}
+html[data-skin="art"] .fhead .ornament[data-slot="folder"]{width:108px;height:108px;left:-22px;top:-22px;opacity:.45}
+html[data-skin="art"] .empty .ornament[data-slot="empty"]{width:150px;height:150px;left:50%;top:13px;margin-left:-75px;opacity:.4}
+html[data-skin="art"] .nf-in .ornament[data-slot="nudge"]{width:230px;height:230px;left:50%;top:-55px;margin-left:-115px;opacity:.45}
+html[data-skin="art"] .art-halo .as-halo{animation-duration:70s}
+
+/* ============ Cards: impasto swirl, top-right corner only, behind content ============ */
+html[data-skin="art"] :is(.tgt-card,.tcard,.bars,.drill-sum,.tree){position:relative;isolation:isolate}
+html[data-skin="art"] :is(.tgt-card,.tcard,.bars,.drill-sum,.tree)::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;
+  background:var(--art-tex,none) 0 0/200px 200px;opacity:var(--art-tex-op);
+  -webkit-mask-image:radial-gradient(120% 150% at 100% 0,#000 0,rgba(0,0,0,.45) 26%,transparent 50%);
+  mask-image:radial-gradient(120% 150% at 100% 0,#000 0,rgba(0,0,0,.45) 26%,transparent 50%)}
+
+/* ============ Progress: paint spreading (brush edge, impasto strokes, spreads in on render) ============ */
+html[data-skin="art"] :is(.hero-tgt,.tgt-card) .bar2{height:10px;border-radius:5px}
+html[data-skin="art"] .bar .track{height:14px}
+html[data-skin="art"] .bar .fill{color:var(--c)}
+html[data-skin="art"] .bar2.over i{color:var(--bad)} html[data-skin="art"] .bar2.warn i{color:var(--warn)}
+html[data-skin="art"] :is(.bar2 i,.bar .fill){border-radius:5px 1px 1px 5px;
+  background:var(--art-tex-fill,none) 0 0/120px 120px,linear-gradient(90deg,color-mix(in srgb,currentColor 80%,#000),currentColor 70%);
+  -webkit-mask:linear-gradient(#000 0 0) left/calc(100% - 9px) 100% no-repeat,var(--art-brush-edge,linear-gradient(#000 0 0)) right/10px 100% no-repeat;
+  mask:linear-gradient(#000 0 0) left/calc(100% - 9px) 100% no-repeat,var(--art-brush-edge,linear-gradient(#000 0 0)) right/10px 100% no-repeat;
+  animation:art-spread 1.3s cubic-bezier(.2,.75,.25,1) both}
+@keyframes art-spread{from{clip-path:inset(0 100% 0 0);background-position:-70px 0,0 0}to{clip-path:inset(0 0 0 0);background-position:0 0,0 0}}
+html[data-skin="art"] .ring .val{stroke-linecap:round}
+
+/* ============ Slider: a cresting wave (paint lags a touch; value + hit target stay instant) ============ */
+html[data-skin="art"] .xs .a{position:relative;background:var(--art-tex-fill,none) 0 0/120px 120px,var(--you);
+  transition:flex-basis .2s cubic-bezier(.3,.75,.35,1.12),height .35s var(--spring)}
+html[data-skin="art"] .xs .a::after{content:"";position:absolute;right:-16px;top:-50%;height:150%;aspect-ratio:34/66;pointer-events:none;
+  background:var(--art-crest,none) center/100% 100% no-repeat;transform-origin:30% 100%;
+  transform:scaleX(var(--art-dir,1)) scaleY(calc(.86 + var(--art-surge,0) * .4)) rotate(calc(var(--art-surge,0) * -7deg));
+  transition:transform .25s cubic-bezier(.3,.7,.3,1.3)}
+html[data-skin="art"] .xs .b{background:var(--art-tex-fill,none) 40px 0/120px 120px,var(--sam)}
+html[data-skin="art"] .xs .h{position:relative;z-index:1;background:var(--surface);box-shadow:0 0 0 2px var(--text)}
+html[data-skin="art"] .art-drop{position:absolute;top:4px;width:6px;height:6px;margin-left:-3px;border-radius:50%;background:#F7F0E0;
+  box-shadow:0 0 0 1.5px var(--you);pointer-events:none;z-index:2;animation:art-drop .6s cubic-bezier(.2,.6,.4,1) forwards}
+@keyframes art-drop{0%{transform:translate(0,0) scale(var(--s))}55%{transform:translate(calc(var(--dx) * .7),var(--dy)) scale(var(--s));opacity:1}
+  100%{transform:translate(var(--dx),calc(var(--dy) * .2 + 12px)) scale(calc(var(--s) * .4));opacity:0}}
+html[data-skin="art"] .art-ripple{position:absolute;top:50%;width:26px;height:26px;margin:-13px;border-radius:50%;border:2px solid var(--you);
+  pointer-events:none;z-index:2;animation:art-ripple .6s ease-out forwards}
+@keyframes art-ripple{from{transform:scale(.3);opacity:.9}to{transform:scale(1.7);opacity:0}}
+
+/* ============ Dial: a swirl you turn ============ */
+html[data-skin="art"] .dial-ring{background:var(--art-dial);overflow:hidden;
+  box-shadow:0 8px 24px rgba(15,25,50,.32),inset 0 0 0 2px rgba(242,193,78,.35)}
+html[data-skin="art"] .dial-ring::after{box-shadow:none}
+html[data-skin="art"] .dial.turning .dial-ring{background:var(--art-dial);box-shadow:0 8px 24px rgba(15,25,50,.32),inset 0 0 0 2px rgba(242,193,78,.8),0 0 0 3px rgba(200,50,110,.35)}
+html[data-skin="art"] .art-dswirl{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+html[data-skin="art"] .ad-0{stroke:#3E6FB0} html[data-skin="art"] .ad-1{stroke:#8DB3E8} html[data-skin="art"] .ad-2{stroke:#F2C14E} html[data-skin="art"] .ad-3{stroke:#E9E2CF}
+html[data-skin="art"] .dial-ticks i{background:#F4ECDC;opacity:.45}
+html[data-skin="art"] .dial-ticks i:first-child{background:#F2C14E;opacity:1}
+html[data-skin="art"] .dial-core{background:#F2C14E;color:#1A1400}
+html[data-skin="art"] .dial.adjust .dial-core{background:#F4ECDC;color:#172238}
+html[data-skin="art"] .dial.commit .dial-core{background:radial-gradient(circle,#F2C14E 0 42%,#E9853A 70%,#C8326E);color:#1A1400}
+
+/* ============ Motion modes ============ */
+/* stop: held frames ≈12fps (steps ≈ duration × 12); hybrid: only .sm (mascot, empty states) is stepped */
+html[data-skin="art"][data-motion="stop"] .aw-main{animation-timing-function:steps(132)}
+html[data-skin="art"][data-motion="stop"] :is(.aw-claws,.aw-spray){animation-timing-function:steps(40)}
+html[data-skin="art"][data-motion="stop"] .aw-far{animation-timing-function:steps(168)}
+html[data-skin="art"][data-motion="stop"] .aw-front{animation-timing-function:steps(96)}
+html[data-skin="art"][data-motion="stop"] .ptitle::after{animation-timing-function:steps(168)}
+html[data-skin="art"]:is([data-motion="stop"],[data-motion="hybrid"]) .sm .as-halo,
+html[data-skin="art"][data-motion="stop"] .as-halo{animation-timing-function:steps(96)}
+html[data-skin="art"][data-motion="stop"] :is(.art-drop,.art-ripple){animation-timing-function:steps(7)}
+html[data-skin="art"][data-motion="stop"] :is(.bar2 i,.bar .fill){animation-timing-function:steps(14)}
+html[data-skin="art"][data-motion="stop"] .xs .a{transition-timing-function:steps(3),var(--spring)}
+/* hidden tab → nothing animates */
+html.art-paused[data-skin="art"] :is(.art-a,.fab,.as-halo),html.art-paused[data-skin="art"] .ptitle::after{animation-play-state:paused}
+@media (prefers-reduced-motion:reduce){
+  html[data-skin="art"] .xs .a::after{transform:none}
+  html[data-skin="art"] :is(.art-drop,.art-ripple){display:none}
+}
+html[data-skin="art"] :is(.hero,.today) .stpill{text-shadow:none}
+html[data-skin="art"] .today .ring .trk{stroke:rgba(244,236,220,.2)}

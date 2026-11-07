@@ -229,6 +229,49 @@ Security details (hashed tokens, Origin checks, WS auth timeout, rate limits) ar
 
 V3 visual work (DESIGN §9.11) runs alongside M1–M3 as skin CSS. It doesn't block any milestone.
 
+## B1. First build: contract (2026-11-07)
+Scope picked by the user: **logging + sync + security**, all five skins, at **`halves.amlanandanwesha.com`**. Targets/Trends UI ships as-is from V2 (data synced), with polish later.
+
+**Deviations from the T-parts, for speed (revisit later):**
+- **Client stays vanilla JS** (the V2 prototype, reviewed 3 rounds) instead of a Svelte port. Plain JS is even lighter than Svelte, and Svelte (T2) can come later if the UI grows.
+- **Server stores entities as JSON docs** (`docs(kind,id,data,version,...)`) instead of the full relational schema (T4). It's the same sync semantics, just less schema to migrate while the model is still moving.
+- **Bootstrap uses a one-time secret** (`wrangler secret put BOOTSTRAP_SECRET`) instead of Cloudflare Access. That's one less dashboard step. Once the pair exists, the secret is dead.
+
+**Layout:**
+- `app/`: static files: `index.html` (from prototype-v2), `skins/`, `sync.js`, `manifest.webmanifest`, `sw.js` and icons.
+- `worker/src/index.ts`: the front door.
+- `worker/src/pair.ts`: the `Pair` Durable Object.
+- `wrangler.jsonc`, `package.json` and `tests/` at the repo root.
+
+**Entity kinds** (`data` is the prototype's object with ids as random strings):
+- `folder`, `expense`, `settle`, `target`, `tag`, `pref` (shared pair settings: mode, overall target).
+- People are stored as slots `"A"` and `"B"`, never "you". The client maps the viewer's slot to "You". Names come from `pair.names`.
+
+**HTTP** (JSON, `Authorization: Bearer <deviceToken>`, Origin must equal the app origin):
+| Route | Auth | Does |
+|---|---|---|
+| `POST /api/bootstrap` `{secret, name, device}` | secret | creates the pair (slot A) and the first device → `{token, slot}`. 409 once the pair exists. |
+| `POST /api/invite` | device | → `{key}`: 24 h, single-use, stored hashed. Link is `/join#k=<key>`. |
+| `POST /api/redeem` `{key, name, device}` | key | creates a **pending** device for slot B (or a known slot if the name matches) → `{pendingToken, slot}`. Rate-limited. |
+| `GET /api/pending` | device | lists devices awaiting approval |
+| `POST /api/approve` `{deviceId, allow}` | device (active) | activates the device, or deletes it |
+| `GET /api/me` | device or pending token | `{status: active/pending, slot, names, deviceId}` |
+| `GET /api/devices`, `POST /api/revoke {deviceId}` | device | Settings → Devices |
+| `POST /api/sync` `{since, ops[]}` | device | HTTP fallback, same semantics as the WS |
+
+**WebSocket** `/api/ws`:
+- The first message is `{t:"auth", token}`. With no auth within 5 s the socket is closed.
+- Client → server: `{t:"sync", since, ops:[{opId, kind, id, base, set:{...fields}, del?:true}]}`.
+- Server → client:
+  - `{t:"ack", opId, version}`
+  - `{t:"reject", opId, reason, current}` (current = the server doc, used for rollback)
+  - `{t:"changes", docs:[{kind, id, data, version, deleted, by}], cursor}`
+  - `{t:"pending"}`: a device is waiting for approval
+- **Merge:** field-level. When `base` < the server version, fields not changed since `base` still apply. Conflicting fields: the server's version wins, and the client is told through `changes`. Ops are idempotent by `opId`.
+- **Limits:** ≤ 2 slots, ≤ 6 devices, ≤ 200 ops per message, docs ≤ 8 KB.
+
+**Client sync** (`app/sync.js`): after every `render()`, it diffs the in-memory collections against the last-known server copy and turns the differences into ops. The ops are persisted to an outbox (IndexedDB, with localStorage fallback) and drained over the WS or HTTP. Retries follow T5a. The "sync in danger" line follows T5a.
+
 ## Decisions
 | # | Decision | Status |
 |---|---|---|
@@ -241,6 +284,7 @@ V3 visual work (DESIGN §9.11) runs alongside M1–M3 as skin CSS. It doesn't bl
 | 7 | Access | ✅ device token + approval by an existing device for new devices; a Face ID lock comes later (T7a) |
 
 ## Changelog
+- 2026-11-07 v1.3: B1 first-build contract (vanilla client, JSON docs, bootstrap secret).
 - 2026-11-07 v1.2: T7a security layers + domain moved to amlanandanwesha.com (subdomain).
 - 2026-11-07 v1.1: T5a: invisible sync with retry triggers and the "sync in danger" rule.
 - 2026-11-07 v1: user decisions folded in (git, Svelte, link pairing plus the iOS storage gotcha, PWA-only).

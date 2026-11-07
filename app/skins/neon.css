@@ -1,0 +1,312 @@
+/* Halves V2 · exploration skin "neon": 80s Las Vegas neon, sleek and grown-up (DESIGN.md §9.10 "Neon skin").
+   Every rule is scoped to html[data-skin="neon"]. neon.js injects fonts and drives the game-feel bits
+   (slider charge --nn-v, dial tick lighting .nn-lit / --nn-charge, press ignition .nn-ign, rare idle flicker .nn-flick).
+   Dark = night: near-black wall, hot pink + cyan / violet / amber tubes, glow spills onto the surface below.
+   Light = daytime sign: pale concrete, tubes UNLIT (glass colour, no glow) until you touch them (hover/press/drag/focus).
+   The glow switch is one element-local number: --nn-k (1 night, 0 day, 1.7 = ignited). Every glow is written as
+   calc(var(--nn-k) * Npx) in the element's own rule, so a lit state is just `--nn-k:1` on that element.
+   Legibility: glow only on display type (titles, hero/big numbers); body and small text stay crisp. Pairs ≥ 4.5:1.
+   Perf: no per-frame shadow animation. Charge/flicker/ignite animate opacity or a filter on small elements only.
+   Original work only: no real casino or brand signage. */
+
+/* ============ Tokens: day (light) ============ */
+html[data-skin="neon"]{
+  --font-ui:"Manrope",system-ui,sans-serif; --font-display:"Tilt Neon","Manrope",system-ui,sans-serif;
+  --font-num:"Tilt Neon","Manrope",system-ui,sans-serif; --font-brand:"Monoton","Tilt Neon",sans-serif;
+  --bg:#E4E2DE; --surface:#F1F0ED; --s1:#E9E7E3; --s2:#DCD9D3; --s3:#CCC8C0;
+  --text:#17151C; --muted:#4F4A57; --outline:#B5B0A8;
+  --primary:#A3125C; --on-primary:#FFFFFF; --primary-c:#F3D0E2; --on-primary-c:#45062A;
+  --you:#C8257A; --you-c:#F5D0E3; --you-t:#96104F; --sam:#0B8796; --sam-c:#C4ECF0; --sam-t:#055F6A;
+  --coral:#F6D3DA; --on-coral:#4A1020; --teal:#CBEDEF; --on-teal:#06393F; --lilac:#E2D6F7; --on-lilac:#2E1659;
+  --sun:#F6E3B4; --on-sun:#3D2A00; --sage:#D4EBDC; --on-sage:#0F3320; --sky:#D3E1F6; --on-sky:#0E2A4D;
+  --good:#19674A; --good-c:#CDE9DC; --warn:#7A5000; --warn-c:#F4E1AE; --bad:#A8132A; --bad-c:#F5CFD3;
+  --scrim:rgba(23,21,28,.42); --shadow:0 6px 20px rgba(23,21,28,.14);
+  --r-xl:22px; --r-l:14px; --r-m:10px;
+  color-scheme:light;
+  /* neon-only */
+  --nn-k:0;                                   /* glow switch: day = unlit */
+  --nn-pink:#E2338F; --nn-cyan:#0FA6B4; --nn-violet:#7C4BD6; --nn-amber:#D48A12; --nn-red:#D8283E; --nn-mint:#159E6E;
+  --nn-core:var(--text);                      /* display text colour (white-hot core at night, ink by day) */
+  --nn-tube-a:.55;                            /* unlit tube opacity */
+  --nn-panel:#ECEAE6; --nn-wall:radial-gradient(120% 70% at 50% -10%,#EFEDEA 0,#E4E2DE 60%);
+  --nn-glass:rgba(23,21,28,.07); --nn-rim:rgba(23,21,28,.18);
+  --nn-knob:radial-gradient(circle at 50% 38%,#F7F6F3 0 40%,#D9D6D0 72%,#BDB8B0 100%);
+  --nn-knurl:repeating-conic-gradient(from 0deg,rgba(23,21,28,.06) 0 4deg,transparent 4deg 8deg);
+}
+/* ============ Tokens: night (dark) — same set, twice (explicit + system) ============ */
+html[data-skin="neon"][data-theme="dark"]{
+  --bg:#0A090E; --surface:#121019; --s1:#16131E; --s2:#1F1B29; --s3:#2A2536;
+  --text:#F5F0FA; --muted:#ADA4BD; --outline:#3A3349;
+  --primary:#FF3EA5; --on-primary:#1C0011; --primary-c:#3B0F2C; --on-primary-c:#FFC6E4;
+  --you:#FF4FB0; --you-c:#3B1030; --you-t:#FF8FCB; --sam:#2FE3F0; --sam-c:#0A2D33; --sam-t:#7EEFF7;
+  --coral:#3A1622; --on-coral:#FFC7D6; --teal:#0B2E33; --on-teal:#A8F2F7; --lilac:#261A40; --on-lilac:#DCC8FF;
+  --sun:#33270A; --on-sun:#FFDD8A; --sage:#142B1F; --on-sage:#BEF0CF; --sky:#102340; --on-sky:#BFD8FF;
+  --good:#4DF2B8; --good-c:#0C2A21; --warn:#FFC247; --warn-c:#33260A; --bad:#FF5A5F; --bad-c:#3A0F14;
+  --scrim:rgba(0,0,0,.66); --shadow:0 10px 30px rgba(0,0,0,.6); color-scheme:dark;
+  --nn-k:1;
+  --nn-pink:#FF3EA5; --nn-cyan:#2FE3F0; --nn-violet:#A970FF; --nn-amber:#FFB547; --nn-red:#FF4B5C; --nn-mint:#4DF2B8;
+  --nn-core:#FFEFF8; --nn-tube-a:1;
+  --nn-panel:#100E16; --nn-wall:radial-gradient(120% 60% at 50% -10%,#1A1224 0,#0A090E 62%);
+  --nn-glass:rgba(255,255,255,.06); --nn-rim:rgba(255,255,255,.1);
+  --nn-knob:radial-gradient(circle at 50% 36%,#2E2838 0 30%,#16131C 70%,#0B0A0F 100%);
+  --nn-knurl:repeating-conic-gradient(from 0deg,rgba(255,255,255,.05) 0 4deg,transparent 4deg 8deg);
+}
+@media (prefers-color-scheme:dark){html[data-skin="neon"]:not([data-theme="light"]){
+  --bg:#0A090E; --surface:#121019; --s1:#16131E; --s2:#1F1B29; --s3:#2A2536;
+  --text:#F5F0FA; --muted:#ADA4BD; --outline:#3A3349;
+  --primary:#FF3EA5; --on-primary:#1C0011; --primary-c:#3B0F2C; --on-primary-c:#FFC6E4;
+  --you:#FF4FB0; --you-c:#3B1030; --you-t:#FF8FCB; --sam:#2FE3F0; --sam-c:#0A2D33; --sam-t:#7EEFF7;
+  --coral:#3A1622; --on-coral:#FFC7D6; --teal:#0B2E33; --on-teal:#A8F2F7; --lilac:#261A40; --on-lilac:#DCC8FF;
+  --sun:#33270A; --on-sun:#FFDD8A; --sage:#142B1F; --on-sage:#BEF0CF; --sky:#102340; --on-sky:#BFD8FF;
+  --good:#4DF2B8; --good-c:#0C2A21; --warn:#FFC247; --warn-c:#33260A; --bad:#FF5A5F; --bad-c:#3A0F14;
+  --scrim:rgba(0,0,0,.66); --shadow:0 10px 30px rgba(0,0,0,.6); color-scheme:dark;
+  --nn-k:1;
+  --nn-pink:#FF3EA5; --nn-cyan:#2FE3F0; --nn-violet:#A970FF; --nn-amber:#FFB547; --nn-red:#FF4B5C; --nn-mint:#4DF2B8;
+  --nn-core:#FFEFF8; --nn-tube-a:1;
+  --nn-panel:#100E16; --nn-wall:radial-gradient(120% 60% at 50% -10%,#1A1224 0,#0A090E 62%);
+  --nn-glass:rgba(255,255,255,.06); --nn-rim:rgba(255,255,255,.1);
+  --nn-knob:radial-gradient(circle at 50% 36%,#2E2838 0 30%,#16131C 70%,#0B0A0F 100%);
+  --nn-knurl:repeating-conic-gradient(from 0deg,rgba(255,255,255,.05) 0 4deg,transparent 4deg 8deg);
+}}
+
+/* ============ Lit states (day: tubes light on touch; night: ignite = brighter) ============ */
+html[data-skin="neon"] :is(.hero,.today,.tgt-card,.tcard,.drill-sum,.pill-btn,.save,.later-btn,.chip,.dchip,.key,.tb,.seg button,.switch,.sortq,.split-ctl,.bgroup button,.catb,.subtile,.fab,.days button,.qtitles button,.crumb):is(:hover,:focus-visible){--nn-k:1}
+html[data-skin="neon"] :is(.hero:focus-within,.xs.drag,.dial.turning,.dial.menu,.dial.adjust){--nn-k:1}
+html[data-skin="neon"] :is(.pill-btn,.save,.later-btn,.chip,.dchip,.key,.tb,.seg button,.switch,.sortq,.split-ctl,.bgroup button,.catb,.fab,.days button,.qtitles button,.icon-btn,.dial-core,.text-btn):active,html[data-skin="neon"] .nn-ign{--nn-k:1.7}
+
+/* ============ Wall, type ============ */
+html[data-skin="neon"] body{background:var(--nn-wall) fixed,var(--bg);font-variation-settings:normal;font-weight:500;-webkit-font-smoothing:antialiased}
+html[data-skin="neon"] :is(.ptitle,.fhead h1,.sheet h3,.nudge-f h2,.treepane h2){font-family:var(--font-display);font-weight:400;font-variation-settings:normal;letter-spacing:.01em}
+/* display tube lettering: white-hot core + coloured halo (night), plain ink (day) */
+html[data-skin="neon"] :is(.ptitle,.fhead h1,.nudge-f h2){--gc:var(--nn-pink);color:var(--nn-core);
+  text-shadow:0 0 calc(var(--nn-k)*2px) var(--gc),0 0 calc(var(--nn-k)*9px) var(--gc),0 0 calc(var(--nn-k)*22px) color-mix(in srgb,var(--gc) 55%,transparent)}
+html[data-skin="neon"] .ptitle{font-size:36px}
+html[data-skin="neon"] .fhead h1{font-size:32px;--gc:var(--nn-violet)}
+html[data-skin="neon"] .treepane h2{font-size:24px;color:var(--nn-core);text-shadow:0 0 calc(var(--nn-k)*8px) var(--nn-violet)}
+html[data-skin="neon"] .sheet h3{font-size:24px;color:var(--text)}
+html[data-skin="neon"] .ptitle+.muted{font-size:14.5px}
+html[data-skin="neon"] :is(b.num,.hero .amt,.today .big,.det-hero .v,.amt-disp .v,.amt-disp .cur,.fnet b,.stat b,.mini-bal b,.xs-labels b,.drill-sum b.num,.tgt-card .big,.key,.dial-bubble b){font-family:var(--font-num);font-weight:400;letter-spacing:.01em;font-variation-settings:normal}
+/* small numbers in rows stay in the clean sans (crisp, tabular) */
+html[data-skin="neon"] :is(.row-x .am b,.node .net,.tcard b.num,.row-x b.num){font-family:var(--font-ui);font-weight:700}
+/* big numbers glow; mid-size ones only a faint halo */
+html[data-skin="neon"] :is(.hero .amt,.today .big,.det-hero .v,.amt-disp .v){--gc:var(--nn-pink);color:var(--nn-core);
+  text-shadow:0 0 calc(var(--nn-k)*2px) var(--gc),0 0 calc(var(--nn-k)*10px) var(--gc),0 0 calc(var(--nn-k)*26px) color-mix(in srgb,var(--gc) 50%,transparent)}
+html[data-skin="neon"] .amt-disp.zero .v{color:var(--muted);text-shadow:none}
+html[data-skin="neon"] :is(.tgt-card .big,.drill-sum b.num,.fnet b,.mini-bal b){color:var(--nn-core);text-shadow:0 0 calc(var(--nn-k)*8px) color-mix(in srgb,var(--nn-violet) 70%,transparent)}
+html[data-skin="neon"] .xs-labels b{text-shadow:0 0 calc(var(--nn-k)*8px) currentColor}
+html[data-skin="neon"] h2.sec{font-family:var(--font-ui);font-weight:800;letter-spacing:.16em;font-size:12px}
+/* a short violet tube before each section label (signage rhythm, not colour-coding) */
+html[data-skin="neon"] h2.sec::before{content:"";width:18px;height:3px;border-radius:2px;flex:none;background:var(--nn-violet);opacity:calc(var(--nn-tube-a));
+  box-shadow:0 0 calc(var(--nn-k)*6px) var(--nn-violet)}
+
+/* ============ Chrome ============ */
+html[data-skin="neon"] .topbar .brand{font-family:var(--font-brand);font-weight:400;font-size:24px;letter-spacing:.04em;font-variation-settings:normal;
+  color:var(--nn-core);text-shadow:0 0 calc(var(--nn-k)*3px) var(--nn-pink),0 0 calc(var(--nn-k)*12px) var(--nn-pink)}
+html[data-skin="neon"] :is(.topbar .brand i,.rail .brand-i){--s:var(--sh-circle)!important;background:conic-gradient(var(--nn-pink) 0 50%,var(--nn-cyan) 0 100%)}
+html[data-skin="neon"] .toolbar{background:color-mix(in srgb,var(--surface) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  box-shadow:inset 0 0 0 1px var(--nn-rim),var(--shadow)}
+html[data-skin="neon"] .tb{transition:background .2s,color .2s,padding .45s var(--spring),box-shadow .2s}
+html[data-skin="neon"] .tb[aria-current="true"]{background:transparent;color:var(--text);
+  box-shadow:inset 0 0 0 1.5px var(--nn-pink),0 0 calc(var(--nn-k)*10px) color-mix(in srgb,var(--nn-pink) 55%,transparent),inset 0 0 calc(var(--nn-k)*10px) color-mix(in srgb,var(--nn-pink) 30%,transparent)}
+html[data-skin="neon"] .tb[aria-current="true"] .ms{color:var(--primary)}
+html[data-skin="neon"] .rail .tb[aria-current="true"]{box-shadow:none}
+html[data-skin="neon"] .rail .tb[aria-current="true"] .ms{background:transparent;box-shadow:inset 0 0 0 1.5px var(--nn-pink),0 0 calc(var(--nn-k)*10px) color-mix(in srgb,var(--nn-pink) 55%,transparent)}
+/* FAB: a lit ring tube on a black cap (clip-path clips outer glow, so the glow lives inside) */
+html[data-skin="neon"] .fab{--s:var(--sh-circle);border-radius:50%;background:radial-gradient(circle,var(--nn-panel) 0 58%,transparent 59%),var(--nn-pink);color:var(--primary);filter:none;
+  box-shadow:inset 0 0 0 4px var(--nn-pink),inset 0 0 calc(4px + var(--nn-k)*12px) var(--nn-pink);transition:box-shadow .18s,transform .4s var(--spring),clip-path .6s var(--spring)}
+html[data-skin="neon"] .fab .ms{text-shadow:0 0 calc(var(--nn-k)*8px) var(--nn-pink)}
+html[data-skin="neon"] .fab:is(:hover,:active){--s:var(--sh-circle)}
+html[data-skin="neon"] .pdot[aria-current="true"]::before{box-shadow:0 0 calc(var(--nn-k)*6px) var(--primary)}
+@media (min-width:960px){
+  html[data-skin="neon"] .treepane{background:var(--s1);box-shadow:inset 0 0 0 1px var(--nn-rim)}
+  html[data-skin="neon"] main{background:var(--bg);border-left:1px solid var(--nn-rim)}
+  html[data-skin="neon"] .rail{background:transparent}
+}
+
+/* ============ Cards: dark glass panels, hairline rims ============ */
+html[data-skin="neon"] :is(.tree,.stat,.subtile,.bars,.tgt-card,.tcard,.drill-sum,.kv,.sortbox){border:0;box-shadow:inset 0 0 0 1px var(--nn-rim)}
+html[data-skin="neon"] .row-x{background:var(--surface)}
+html[data-skin="neon"] .row-x:hover,html[data-skin="neon"] .node:hover{background:var(--s1)}
+html[data-skin="neon"] .node.active{background:transparent;color:var(--text);box-shadow:inset 0 0 0 1.5px var(--nn-pink),inset 0 0 calc(var(--nn-k)*12px) color-mix(in srgb,var(--nn-pink) 25%,transparent)}
+/* pending = the ONE accent: a lit pink tube on the left edge */
+html[data-skin="neon"] :is(.row-x.pend,.sq-row,.sortbox)::before{background:var(--nn-pink);box-shadow:0 0 calc(var(--nn-k)*6px) var(--nn-pink),0 0 calc(var(--nn-k)*14px) color-mix(in srgb,var(--nn-pink) 50%,transparent)}
+html[data-skin="neon"] .pendl,html[data-skin="neon"] .sortc{color:var(--primary)}
+
+/* ============ Hero: the main sign. Tube rim + light spill from the ring onto the panel ============ */
+html[data-skin="neon"] .hero{--hero-bg:var(--nn-panel);--hero-on:var(--text);--tc:var(--nn-pink);
+  background:radial-gradient(160px 120px at 50px 92px,color-mix(in srgb,var(--tc) calc(var(--nn-k)*22%),transparent),transparent 72%),var(--hero-bg);
+  box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--tc) calc(40% + var(--nn-k)*60%),transparent),
+    inset 0 0 calc(var(--nn-k)*22px) color-mix(in srgb,var(--tc) 22%,transparent),0 0 calc(var(--nn-k)*22px) color-mix(in srgb,var(--tc) 28%,transparent);
+  transition:box-shadow .25s}
+html[data-skin="neon"] .hero.over{--tc:var(--nn-red);--hero-bg:var(--nn-panel)}
+html[data-skin="neon"] .hero.owe,html[data-skin="neon"] .hero.even{--hero-bg:var(--nn-panel)}
+html[data-skin="neon"] .hero.over .amt{--gc:var(--nn-red)}
+html[data-skin="neon"] .hero .blob{display:none}
+html[data-skin="neon"] .hero .lbl{opacity:1;color:var(--muted)}
+html[data-skin="neon"] .hero .of{opacity:1;color:var(--muted)}
+html[data-skin="neon"] .hero-tgt{background:var(--nn-glass)}
+html[data-skin="neon"] .hero-owe{border-top-color:var(--nn-rim)}
+html[data-skin="neon"] :is(.hero .row .pill-btn,.hero-owe .pill-btn){background:var(--nn-glass)}
+
+/* Today card: cyan sign when on track, red when over; same spill trick */
+html[data-skin="neon"] .today{--tc:var(--nn-mint);background:radial-gradient(150px 110px at 40px 100%,color-mix(in srgb,var(--tc) calc(var(--nn-k)*18%),transparent),transparent 72%),var(--nn-panel);
+  box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--tc) calc(35% + var(--nn-k)*55%),transparent),0 0 calc(var(--nn-k)*18px) color-mix(in srgb,var(--tc) 22%,transparent)}
+html[data-skin="neon"] .today.over{--tc:var(--nn-red);background:radial-gradient(150px 110px at 40px 100%,color-mix(in srgb,var(--tc) calc(var(--nn-k)*18%),transparent),transparent 72%),var(--nn-panel)}
+html[data-skin="neon"] .today .big{--gc:var(--tc)}
+
+/* ============ Rings, sparklines, bars = neon tubes ============ */
+html[data-skin="neon"] .ring{--rc:var(--nn-mint);overflow:visible;
+  filter:drop-shadow(0 0 calc(var(--nn-k)*2.5px) var(--rc)) drop-shadow(0 0 calc(var(--nn-k)*7px) color-mix(in srgb,var(--rc) 60%,transparent))}
+html[data-skin="neon"] .ring.warn{--rc:var(--nn-amber)} html[data-skin="neon"] .ring.over{--rc:var(--nn-red)} html[data-skin="neon"] .ring.inh{--rc:var(--muted)}
+html[data-skin="neon"] .ring .val{stroke:var(--rc);stroke-opacity:var(--nn-tube-a)}
+html[data-skin="neon"] .ring .trk,html[data-skin="neon"] .hero .ring .trk{stroke:color-mix(in srgb,var(--rc) 16%,transparent)}
+html[data-skin="neon"] :is(.hero,.today,.tcard):is(:hover,:focus-within,.nn-ign) .ring .val{stroke-opacity:1}
+html[data-skin="neon"] .spark{filter:drop-shadow(0 0 calc(var(--nn-k)*3px) var(--nn-cyan))}
+html[data-skin="neon"] .spark .ln{stroke:var(--nn-cyan)}
+/* progress bars: glass tube track, lit fill with a white-hot core; tracks must not clip the glow */
+html[data-skin="neon"] :is(.hero-tgt .bar2,.tgt-card .bar2){height:6px;overflow:visible;background:var(--nn-glass);box-shadow:inset 0 0 0 1px var(--nn-rim)}
+html[data-skin="neon"] .bar2 i{color:var(--nn-pink);opacity:var(--nn-tube-a);
+  background:linear-gradient(180deg,currentColor 0,color-mix(in srgb,currentColor 35%,#fff) 50%,currentColor 100%);
+  box-shadow:0 0 calc(var(--nn-k)*4px) currentColor,0 0 calc(var(--nn-k)*12px) color-mix(in srgb,currentColor 55%,transparent)}
+html[data-skin="neon"] .bar2.warn i{color:var(--nn-amber)} html[data-skin="neon"] .bar2.over i{color:var(--nn-red)}
+html[data-skin="neon"] :is(.hero,.tgt-card):is(:hover,:focus-within) .bar2 i{opacity:1}
+/* light spill under a lit bar: soft wash on the card below the tube (static, cheap) */
+html[data-skin="neon"] .tgt-card{background:radial-gradient(80% 60px at 30% 62%,color-mix(in srgb,var(--nn-pink) calc(var(--nn-k)*10%),transparent),transparent 80%),var(--surface)}
+html[data-skin="neon"] .bar .track{overflow:visible;background:var(--nn-glass)}
+html[data-skin="neon"] .bar .fill{box-shadow:0 0 calc(var(--nn-k)*8px) color-mix(in srgb,var(--c) 70%,transparent)}
+html[data-skin="neon"] .stpill{font-family:var(--font-ui);font-weight:800;letter-spacing:.04em}
+
+/* ============ Buttons: glass tubes that ignite ============ */
+html[data-skin="neon"] :is(.pill-btn,.later-btn,.qtitles button,.crumb,.split-ctl,.days button){background:var(--nn-glass);box-shadow:inset 0 0 0 1px var(--nn-rim);transition:box-shadow .18s,background .2s,border-radius .4s var(--spring),transform .4s var(--spring)}
+html[data-skin="neon"] .crumb:last-child{background:none;box-shadow:none}
+html[data-skin="neon"] :is(.pill-btn,.later-btn,.split-ctl,.qtitles button,.days button):is(:hover,:active,.nn-ign){
+  box-shadow:inset 0 0 0 1.5px var(--nn-cyan),0 0 calc(var(--nn-k)*8px) color-mix(in srgb,var(--nn-cyan) 50%,transparent),inset 0 0 calc(var(--nn-k)*8px) color-mix(in srgb,var(--nn-cyan) 25%,transparent)}
+html[data-skin="neon"] .pill-btn.tonal{background:var(--primary-c);color:var(--on-primary-c)}
+/* the lit CTAs: hot-pink panel, white-hot when pressed */
+html[data-skin="neon"] :is(.pill-btn.filled,.save,.hero .row .pill-btn.filled){background:var(--primary);color:var(--on-primary);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 0 calc(var(--nn-k)*14px) color-mix(in srgb,var(--nn-pink) 55%,transparent)}
+html[data-skin="neon"] .save{font-weight:800;letter-spacing:.04em}
+html[data-skin="neon"] :is(.pill-btn.filled,.save):is(:active,.nn-ign){box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 0 calc(var(--nn-k)*22px) var(--nn-pink)}
+html[data-skin="neon"] .nn-ign{animation:nnIgnite .38s linear}
+@keyframes nnIgnite{0%{filter:brightness(1.9)}8%{filter:brightness(1)}14%{filter:brightness(1.6)}24%{filter:brightness(1.05)}100%{filter:brightness(1)}}
+html[data-skin="neon"] .text-btn{color:var(--primary);font-weight:700}
+html[data-skin="neon"] .sortq{color:var(--primary);box-shadow:inset 0 0 0 1.5px currentColor,0 0 calc(var(--nn-k)*8px) color-mix(in srgb,var(--nn-pink) 40%,transparent)}
+html[data-skin="neon"] .hero .sortq{color:var(--primary)}
+/* chips: glass; pressed = lit outline tube */
+html[data-skin="neon"] .chip{border:0;box-shadow:inset 0 0 0 1px var(--outline);background:transparent;transition:box-shadow .18s,background .2s,border-radius .4s var(--spring)}
+html[data-skin="neon"] .chip[aria-pressed="true"]{background:var(--primary-c);color:var(--on-primary-c);
+  box-shadow:inset 0 0 0 1.5px var(--nn-pink),0 0 calc(var(--nn-k)*10px) color-mix(in srgb,var(--nn-pink) 45%,transparent)}
+html[data-skin="neon"] .dchip{background:var(--nn-glass);box-shadow:inset 0 0 0 1px var(--nn-rim);transition:box-shadow .18s,border-radius .4s var(--spring),transform .4s var(--spring)}
+html[data-skin="neon"] .dchip[aria-pressed="true"]{background:var(--primary-c);color:var(--on-primary-c);box-shadow:inset 0 0 0 1.5px var(--nn-pink),0 0 calc(var(--nn-k)*10px) color-mix(in srgb,var(--nn-pink) 45%,transparent)}
+html[data-skin="neon"] .tagc{background:var(--nn-glass);color:var(--muted);font-weight:700}
+html[data-skin="neon"] .seg button{background:var(--nn-glass);box-shadow:inset 0 0 0 1px var(--nn-rim)}
+html[data-skin="neon"] .seg button[aria-checked="true"]{background:var(--primary-c);color:var(--on-primary-c);box-shadow:inset 0 0 0 1.5px var(--nn-pink),0 0 calc(var(--nn-k)*10px) color-mix(in srgb,var(--nn-pink) 40%,transparent)}
+html[data-skin="neon"] .days button[aria-pressed="true"]{background:var(--primary-c);color:var(--on-primary-c);box-shadow:inset 0 0 0 1.5px var(--nn-pink)}
+/* keypad: black glass keys; a press flashes a pink tube ring */
+html[data-skin="neon"] .key{background:var(--nn-glass);box-shadow:inset 0 0 0 1px var(--nn-rim);font-size:28px;transition:border-radius .35s var(--spring),box-shadow .25s,transform .35s var(--spring)}
+html[data-skin="neon"] :is(.key:active,.key.hit,.key.nn-ign){background:var(--primary-c);color:var(--nn-core);transition-duration:.35s,0s,.35s;
+  box-shadow:inset 0 0 0 1.5px var(--nn-pink),0 0 calc(var(--nn-k)*12px) color-mix(in srgb,var(--nn-pink) 50%,transparent);text-shadow:0 0 calc(var(--nn-k)*8px) var(--nn-pink)}
+html[data-skin="neon"] .key.fn{background:none;box-shadow:none}
+html[data-skin="neon"] :is(.ae-top input,.field input[type=text],.tagnew input,.date-row input,.rem-add input){background:var(--nn-glass);box-shadow:inset 0 0 0 1px var(--nn-rim)}
+html[data-skin="neon"] :is(.ae-top input,.field input[type=text],.tagnew input):focus{box-shadow:inset 0 0 0 1.5px var(--nn-cyan),0 0 calc(var(--nn-k)*10px) color-mix(in srgb,var(--nn-cyan) 35%,transparent)}
+/* switch = a tube that lights */
+html[data-skin="neon"] .switch{background:var(--nn-glass);box-shadow:inset 0 0 0 1px var(--outline)}
+html[data-skin="neon"] .switch[aria-checked="true"]{background:var(--primary-c);box-shadow:inset 0 0 0 1.5px var(--nn-pink),0 0 calc(var(--nn-k)*10px) color-mix(in srgb,var(--nn-pink) 45%,transparent)}
+html[data-skin="neon"] .switch[aria-checked="true"]::after{background:var(--nn-core);box-shadow:0 0 calc(var(--nn-k)*8px) var(--nn-pink)}
+html[data-skin="neon"] .bgroup button{background:var(--nn-glass);box-shadow:inset 0 0 0 1px var(--nn-rim)}
+html[data-skin="neon"] .bgroup button[aria-pressed="true"]{background:var(--pcc);box-shadow:inset 0 0 0 2px var(--pc),0 0 calc(var(--nn-k)*12px) color-mix(in srgb,var(--pc) 45%,transparent)}
+html[data-skin="neon"] .catb[aria-pressed="true"] .ic{outline:2px solid var(--nn-pink);box-shadow:0 0 calc(var(--nn-k)*10px) var(--nn-pink)}
+html[data-skin="neon"] .catb[aria-pressed="true"]{color:var(--primary)}
+
+/* ============ Slider: charging tubes (neon.js sets --nn-v 0..1 and .nn-charge on single-tube sliders) ============ */
+html[data-skin="neon"] .xs{--nn-v:.5}
+html[data-skin="neon"] .xs :is(.a,.b){position:relative;height:16px;transition:height .3s var(--spring)}
+html[data-skin="neon"] .xs.drag :is(.a,.b){height:20px}
+html[data-skin="neon"] .xs .a{--tc:var(--nn-pink);border-radius:10px 4px 4px 10px;background:linear-gradient(180deg,var(--tc),color-mix(in srgb,var(--tc) 40%,#fff) 50%,var(--tc))!important}
+html[data-skin="neon"] .xs .b{--tc:var(--nn-cyan);border-radius:4px 10px 10px 4px;background:linear-gradient(180deg,var(--tc),color-mix(in srgb,var(--tc) 40%,#fff) 50%,var(--tc))!important}
+/* glow layers: brightness = the charge; animated by opacity only */
+html[data-skin="neon"] .xs :is(.a,.b)::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  box-shadow:0 0 6px var(--tc),0 0 18px var(--tc),0 0 36px color-mix(in srgb,var(--tc) 55%,transparent)}
+html[data-skin="neon"] .xs .a::after{opacity:calc(var(--nn-k)*(.12 + .88*var(--nn-v)))}
+html[data-skin="neon"] .xs .b::after{opacity:calc(var(--nn-k)*(.12 + .88*(1 - var(--nn-v))))}
+html[data-skin="neon"] .xs .a{opacity:calc(.45 + .55*min(1,var(--nn-k) + .4) * (.5 + .5*var(--nn-v)))}
+html[data-skin="neon"] .xs .b{opacity:calc(.45 + .55*min(1,var(--nn-k) + .4) * (1 - .5*var(--nn-v)))}
+/* single-tube sliders (bounce, settle): the rest of the track is an unlit glass tube */
+html[data-skin="neon"] .xs.nn-charge .b{background:var(--nn-glass)!important;box-shadow:inset 0 0 0 1px var(--nn-rim);opacity:1}
+html[data-skin="neon"] .xs.nn-charge .b::after{display:none}
+/* handle: the electrode cap */
+html[data-skin="neon"] .xs .h{width:8px;height:40px;border-radius:4px;background:var(--nn-core);box-shadow:0 0 0 1.5px var(--nn-panel),0 0 calc(var(--nn-k)*10px) var(--nn-pink)}
+html[data-skin="neon"] .xs.drag .h{width:5px;height:48px}
+html[data-skin="neon"] .xs .tick{background:var(--nn-core);opacity:.8}
+/* detent snap + full-charge flash */
+html[data-skin="neon"] .xs.nn-snap{animation:nnSnap .26s linear}
+html[data-skin="neon"] .xs.nn-full{animation:nnFull .52s linear}
+@keyframes nnSnap{0%{filter:brightness(2.1)}35%{filter:brightness(1.2)}100%{filter:none}}
+@keyframes nnFull{0%{filter:brightness(2.6) saturate(.6)}10%{filter:brightness(1)}18%{filter:brightness(2)}40%{filter:brightness(1.3)}100%{filter:none}}
+html[data-skin="neon"] .bdemo{border-bottom:2px dashed var(--outline)}
+html[data-skin="neon"] .bdemo i{background:var(--nn-core);box-shadow:0 0 0 2px var(--nn-pink),0 0 calc(var(--nn-k)*10px) var(--nn-pink)}
+
+/* ============ Thumb dial: lit rotary knob with a glowing tick ring ============ */
+html[data-skin="neon"] .dial-ring{background:var(--nn-knurl),var(--nn-knob);box-shadow:var(--shadow)}
+html[data-skin="neon"] .dial.turning .dial-ring{background:var(--nn-knurl),var(--nn-knob)}
+/* tube rim around the knob: its glow follows the charge (lit ticks / 24) — opacity only */
+html[data-skin="neon"] .dial-ring::after{box-shadow:inset 0 0 0 1.5px var(--nn-violet),0 0 0 1.5px color-mix(in srgb,var(--nn-violet) 40%,transparent),0 0 16px var(--nn-violet),0 0 34px color-mix(in srgb,var(--nn-violet) 50%,transparent);
+  opacity:calc(.35 + .3*min(1,var(--nn-k)) + .35*var(--nn-charge,0));transition:opacity .3s}
+html[data-skin="neon"] .dial.turning .dial-ring::after{transition-duration:.08s}
+/* fixed pointer notch (amber) at 12 o'clock: ticks light as they pass it */
+html[data-skin="neon"] .dial-ring::before{content:"";position:absolute;left:50%;top:-6px;width:8px;height:8px;margin-left:-4px;z-index:2;clip-path:polygon(0 0,100% 0,50% 100%);
+  background:var(--nn-amber);filter:drop-shadow(0 0 calc(var(--nn-k)*3px) var(--nn-amber))}
+html[data-skin="neon"] .dial-ticks i{background:color-mix(in srgb,var(--nn-cyan) 30%,var(--outline));opacity:.6;transition:background .6s,box-shadow .6s,opacity .6s}
+html[data-skin="neon"] .dial-ticks i.nn-lit{background:color-mix(in srgb,var(--nn-cyan) 45%,#fff);opacity:1;transition-duration:.04s;
+  box-shadow:0 0 4px var(--nn-cyan),0 0 10px color-mix(in srgb,var(--nn-cyan) 60%,transparent)}
+html[data-skin="neon"] .dial-ticks i:first-child{background:var(--nn-pink);opacity:1;box-shadow:0 0 calc(var(--nn-k)*6px + 2px) var(--nn-pink)}
+html[data-skin="neon"] .dial.nn-full .dial-ring{animation:nnFull .6s linear}
+/* core = the knob cap: black glass, an inner tube ring; colour tells the mode (pink · cyan adjust · amber commit) */
+html[data-skin="neon"] .dial .dial-core,html[data-skin="neon"] .dial:is(.adjust,.commit,.pressed) .dial-core{--s:var(--sh-circle)}
+html[data-skin="neon"] .dial-core{--tc:var(--nn-pink);border-radius:50%;background:var(--nn-panel);color:var(--tc);
+  box-shadow:inset 0 0 0 2.5px var(--tc),inset 0 0 calc(4px + var(--nn-k)*10px) color-mix(in srgb,var(--tc) 70%,transparent);transition:box-shadow .2s,transform .3s var(--spring)}
+html[data-skin="neon"] .dial-core .ms{text-shadow:0 0 calc(var(--nn-k)*8px) var(--tc)}
+html[data-skin="neon"] .dial.adjust .dial-core{--tc:var(--nn-cyan);background:var(--nn-panel);color:var(--tc)}
+html[data-skin="neon"] .dial.commit .dial-core{--tc:var(--nn-amber);background:var(--nn-panel);color:var(--tc)}
+html[data-skin="neon"] .dial.pressed .dial-core{box-shadow:inset 0 0 0 2.5px var(--tc),inset 0 0 22px var(--tc)}
+html[data-skin="neon"] .dial-bubble{background:var(--nn-panel);color:var(--text);box-shadow:inset 0 0 0 1.5px var(--nn-cyan),0 0 calc(var(--nn-k)*14px) color-mix(in srgb,var(--nn-cyan) 35%,transparent)}
+html[data-skin="neon"] .dial-bubble b{color:var(--nn-core);text-shadow:0 0 calc(var(--nn-k)*8px) var(--nn-cyan)}
+html[data-skin="neon"] .dial-opt{background:var(--nn-panel);box-shadow:inset 0 0 0 1px var(--nn-rim),var(--shadow)}
+html[data-skin="neon"] .dial.menu .dial-opt.hot{background:var(--nn-panel);color:var(--primary);box-shadow:inset 0 0 0 2px var(--nn-pink),0 0 14px color-mix(in srgb,var(--nn-pink) 50%,transparent)}
+html[data-skin="neon"] .dial-focus{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--nn-cyan),0 0 calc(var(--nn-k)*14px) var(--nn-cyan)!important}
+
+/* ============ Sheet, snack, nudges, coach ============ */
+html[data-skin="neon"] .sheet{background:var(--surface);box-shadow:0 -1px 0 var(--nn-rim),var(--shadow)}
+html[data-skin="neon"] .sheet::after{background:var(--surface)}
+html[data-skin="neon"] .grab i{background:var(--nn-violet);box-shadow:0 0 calc(var(--nn-k)*6px) var(--nn-violet)}
+html[data-skin="neon"] .snack{background:var(--nn-panel);color:var(--text);box-shadow:inset 0 0 0 1px var(--nn-rim),var(--shadow)}
+html[data-skin="neon"] .snack button{color:var(--primary)}
+html[data-skin="neon"] .nudge-b{background:var(--nn-panel);color:var(--text);box-shadow:inset 0 0 0 1.5px var(--nn-violet),0 0 calc(var(--nn-k)*18px) color-mix(in srgb,var(--nn-violet) 40%,transparent),var(--shadow)}
+html[data-skin="neon"] .nudge-b .pill-btn.filled{background:var(--primary);color:var(--on-primary)}
+html[data-skin="neon"] .nudge-b .pill-btn{background:var(--nn-glass);color:inherit}
+html[data-skin="neon"] .nb-ic{background:var(--nn-glass);color:var(--nn-violet)}
+html[data-skin="neon"] .nudge-f{background:var(--nn-wall),var(--bg)}
+html[data-skin="neon"] .nf-ic{background:var(--nn-panel);color:var(--primary);box-shadow:inset 0 0 0 2px var(--nn-pink),inset 0 0 calc(var(--nn-k)*16px) var(--nn-pink)}
+html[data-skin="neon"] .coach{background:var(--nn-panel);color:var(--text);box-shadow:inset 0 0 0 1.5px var(--nn-amber),0 0 calc(var(--nn-k)*14px) color-mix(in srgb,var(--nn-amber) 35%,transparent)}
+html[data-skin="neon"] .suggest{background:var(--nn-panel);color:var(--text);box-shadow:inset 0 0 0 1.5px var(--nn-amber)}
+html[data-skin="neon"] .proto{background:var(--nn-panel);color:var(--muted);box-shadow:inset 0 0 0 1px var(--nn-rim)}
+html[data-skin="neon"] .confetti{filter:drop-shadow(0 0 4px currentColor) brightness(1.3)}
+html[data-skin="neon"] :focus-visible{outline-color:var(--nn-cyan)}
+
+/* ============ Decoration: no mascot (grown-up); a small original 4-point sparkle sign in the ornament slots ============ */
+html[data-skin="neon"] .mascot{display:none!important}
+html[data-skin="neon"] .ornament{display:none}
+html[data-skin="neon"] .ornament:is([data-slot="hero"],[data-slot="today"],[data-slot="empty"],[data-slot="nudge"]){display:block;position:absolute;right:16px;top:14px;width:30px;height:30px;
+  background:var(--nn-amber);opacity:calc(.35 + .65*min(1,var(--nn-k)));
+  clip-path:polygon(50% 0,58% 42%,100% 50%,58% 58%,50% 100%,42% 58%,0 50%,42% 42%);
+  filter:drop-shadow(0 0 calc(var(--nn-k)*4px) var(--nn-amber))}
+html[data-skin="neon"] .ornament[data-slot="today"]{background:var(--nn-cyan);filter:drop-shadow(0 0 calc(var(--nn-k)*4px) var(--nn-cyan))}
+html[data-skin="neon"] .empty .ornament{position:relative;right:auto;top:auto;margin:0 auto 10px}
+
+/* ============ Idle flicker (neon.js adds .nn-flick rarely; never under reduced motion) ============ */
+html[data-skin="neon"] .nn-flick{animation:nnFlick 1.1s linear}
+@keyframes nnFlick{0%,100%{opacity:1}6%{opacity:.55}9%{opacity:1}12%{opacity:.7}15%{opacity:1}52%{opacity:1}55%{opacity:.62}60%{opacity:1}}
+html[data-skin="neon"] .ornament.nn-flick{animation-name:nnFlickO}
+@keyframes nnFlickO{0%,100%{opacity:.95}6%{opacity:.3}9%{opacity:.95}12%{opacity:.45}15%{opacity:.95}55%{opacity:.4}60%{opacity:.95}}
+html[data-motion="stop"][data-skin="neon"] .nn-flick{animation-timing-function:steps(1,end)}
+@media (prefers-reduced-motion:reduce){html[data-skin="neon"] :is(.nn-flick,.nn-ign,.nn-snap,.nn-full,.dial.nn-full .dial-ring){animation:none!important}}
