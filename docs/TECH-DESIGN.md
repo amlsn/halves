@@ -229,6 +229,20 @@ Security details (hashed tokens, Origin checks, WS auth timeout, rate limits) ar
 
 V3 visual work (DESIGN §9.11) runs alongside M1–M3 as skin CSS. It doesn't block any milestone.
 
+## T15. Attachments: screenshots, receipts (proposed 2026-11-07, not built)
+- **The client compresses before upload, with text clarity first:**
+  - **Screenshots** (PNG in, flat colours): keep the native resolution, capped at 2400 px on the long edge, and encode as **lossless or near-lossless WebP**. That gives crisp text at ~100–300 KB.
+  - **Photos** (receipts, bills): cap at 2000 px and encode as **WebP q≈80**, which avoids JPEG's ringing around text. An optional *Document* look (greyscale + contrast) gets them to ~80–150 KB.
+  - **Hard cap of 1 MB**: step the quality down until it fits. A 320 px thumbnail is generated for list rows. EXIF/GPS metadata is stripped by the re-encode.
+  - Safari can't reliably encode WebP from a canvas, so iOS uses a small lazy-loaded WASM encoder (only fetched when you attach something), with JPEG q≈88 as the fallback.
+- **Upload:**
+  - `PUT /api/att/<id>` (device token), served back only through the authenticated API. There are never public URLs.
+  - The expense syncs at once with a placeholder, and the image waits in the IndexedDB outbox when offline (T5a).
+- **Storage options:**
+  - **A. R2**: 10 GB free, egress free. R2 is **not enabled on this account yet** (`wrangler r2 bucket list` → code 10042); enabling it in the dashboard needs a payment method on file, though usage stays $0 under the free limits. It's a separate failure domain from the data.
+  - **B. Inside the Pair DO's SQLite**: chunked blobs (values ≤ 2 MB). No card needed, but it counts toward the free **5 GB total** DO storage, and backups get bigger. Can be migrated to R2 later.
+- **Budget:** ~10 images/day × ~250 KB ≈ 2.5 MB/day ≈ **0.9 GB/year**. Request and row-write counts are negligible (tens per day against 100k).
+
 ## B1. First build: contract (2026-11-07)
 Scope picked by the user: **logging + sync + security**, all five skins, at **`halves.amlanandanwesha.com`**. Targets/Trends UI ships as-is from V2 (data synced), with polish later.
 
