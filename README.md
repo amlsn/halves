@@ -49,3 +49,10 @@ Prototype tips: system/browser Back goes up a folder (and closes sheets) · long
 > Objective: TECH-DESIGN v1 has the user decisions (git, Svelte, link pairing, PWA-only). Next: plan the spikes (S1–S3) and milestone M1. Don't scaffold code until the user approves.
 > State: the user's V2 skin review is in DESIGN §9.11 (feeds V3, not a blocker). The skin-picker labels bug is fixed.
 > Read first: TECH-DESIGN "Decisions for you", TECH-REVIEW §1, §5 and §9.
+
+## Live (first build, deployed 2026-11-07)
+- URL: https://halves.amlanandanwesha.com (Worker `halves`, Custom Domain; the wedding site at the apex is untouched).
+- Deploy: `npx wrangler deploy`. **Bump `VERSION` in `app/sw.js` on every deploy.** Local: `cp .dev.vars.example .dev.vars && npm run dev`; tests: `npm test`.
+- One-time setup link: `.prod-setup-link.local` (gitignored, chmod 600). It stops working once the pair exists. Rotate with `npx wrangler secret put BOOTSTRAP_SECRET`.
+- Pairing: Settings → Invite → WhatsApp link → approve on the paired phone (TECH-DESIGN T7/T7a, B1).
+- Known gaps: per-IP rate limit and Turnstile not built; the ops log is never trimmed; the server doesn't check expense rules; no nightly backup yet (T11); no Android Background Sync.
