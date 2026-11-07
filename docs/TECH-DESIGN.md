@@ -96,6 +96,25 @@ This is already reviewed in TECH-REVIEW §3 and §9. In short:
 - The outbox drains to the server whenever it's online (T6). If the server rejects a change (rare, e.g. a folder was deleted), the app rolls that change back and shows a snackbar.
 - Ask the browser for persistent storage (`navigator.storage.persist()`) so iOS doesn't evict it. The server is still the source of truth, so a wiped phone just re-downloads.
 
+### T5a. Bad or no internet: sync stays invisible (user input 2026-11-07)
+- **Default: nothing to watch.** There's no sync icon, spinner or "synced" badge. Logging always succeeds instantly on the phone (T5).
+- **When it retries** (this replaces a fixed 20–30 min timer, which is too slow when the network comes back and pointless when it hasn't):
+  - immediately after each log
+  - when the phone reports it's back online (`online` event)
+  - when the app is reopened or comes to the foreground
+  - otherwise with backoff while the app is open: 5 s → 30 s → 2 min → then every 15 min
+- **Platform limit:**
+  - A web app **can't retry while it's closed on iPhone**. iOS gives PWAs no background sync, so the retry happens on the next open.
+  - Android Chrome can retry once after connectivity returns (Background Sync API), as a bonus.
+  - Either way nothing is lost: the data waits safely in the outbox.
+- **Slow internet is fine.** An expense is under 1 KB, so even 2G gets it through. What actually breaks sync is *no* connection, captive Wi-Fi (hotel or airport login pages), or the server rejecting a change.
+- **"Sync in danger": the only time the user sees anything.** It's one quiet line on Home, in the existing nudge/banner style, with no new element type. Example: "3 expenses are only on this phone · Try now".
+  - When it shows: the oldest unsent change is over **24 h** old *and* there have been ≥ 5 failed attempts. Captive Wi-Fi counts: a reply that isn't JSON from our API is treated as a failure.
+  - Also shown at once when **storage persistence was refused**, since iOS may then clear the phone copy.
+- **A server rejection is different from being offline.** That rolls the change back and shows a snackbar straight away (T5). It doesn't wait 24 h.
+- **The server can't warn you about a phone it hasn't heard from.** A push notification would need the phone to have reached the server, so the warning is in-app only.
+  - Optional later: if *your* phone hasn't checked in for 3 days, the partner's app shows "Amlan's phone hasn't synced in 3 days".
+
 ## T6. Sync protocol (phone ⇄ server)
 - **One WebSocket per open app.** It's used for live "Sam added ₹240" updates and outbox sends. HTTP is the fallback when the socket can't connect.
 - **Messages:**
@@ -196,5 +215,6 @@ V3 visual work (DESIGN §9.11) runs alongside M1–M3 as skin CSS. It doesn't bl
 | 5 | Who sees data | assumed: only the two of you, plus your admin login. ❓ confirm |
 
 ## Changelog
+- 2026-11-07 v1.1: T5a: invisible sync with retry triggers and the "sync in danger" rule.
 - 2026-11-07 v1: user decisions folded in (git, Svelte, link pairing plus the iOS storage gotcha, PWA-only).
 - 2026-11-07 v0: first breakdown, from TECH-REVIEW v1.1 and the V2 prototype.
