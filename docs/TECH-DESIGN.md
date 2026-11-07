@@ -143,6 +143,30 @@ This is already reviewed in TECH-REVIEW §3 and §9. In short:
 Security details (hashed tokens, Origin checks, WS auth timeout, rate limits) are already reviewed in TECH-REVIEW §5. Passkeys are a possible later upgrade.
 
 
+### T7a. Keeping everyone else out (user input 2026-11-07)
+**A hidden URL is not security.** Links leak through WhatsApp previews, browser history and screenshots, so access rests on layers. Each layer is free:
+1. **The app files are public; the data is not.** Anyone can load the empty shell (HTML/JS, no data in it). Every data call needs a valid **device token**, which is 256-bit, stored hashed and revocable. Without one, the API returns 401 and nothing else.
+2. **A new device needs two things: something you have, plus approval** (this is the 2FA):
+   - It needs the invite link (single-use, 24 h).
+   - **An already-paired phone must also tap *Approve "Anwesha's iPhone"?*.**
+   - A leaked or forwarded link on its own gets nothing.
+   - Each pair has a hard cap of **2 people** and ≤ 6 devices.
+3. **Face ID / fingerprint app lock (optional, per device):**
+   - A passkey (WebAuthn) unlocks the app on open, or after N minutes away.
+   - This protects a phone that's already unlocked and in someone else's hand.
+   - Planned as a later setting, not a launch blocker.
+4. **Bootstrap (the very first device):** a one-time `/admin` step behind **Cloudflare Access email one-time code**, allowed for exactly your two emails. After that, Access is never in the app's path (TECH-REVIEW §5 explains why).
+5. **Edge hygiene:**
+   - Rate-limit pairing endpoints, and use Turnstile (already used by the wedding site) on the join page.
+   - `noindex` and no links from the wedding site, so search engines never list it.
+   - Strict Origin checks (TECH-REVIEW §5).
+6. **Admin / aggregate view:** both of you are equal owners, so no separate admin login is needed to see totals. An "everything" aggregate view (all folders and trends combined) is a later feature, not an access level.
+
+**Where it lives:** **`halves.amlanandanwesha.com`** (recommended) rather than `amlanandanwesha.com/halves`.
+- The wedding Worker owns the whole apex hostname as a Custom Domain, and a second Worker on a path of that hostname is fragile.
+- A subdomain also gets its **own browser storage and cookies**, fully isolated from the public wedding site.
+- The Worker is attached as its own Custom Domain, with `workers_dev`/`preview_urls` off.
+
 ## T8. Worker (the front door)
 - Serves the app's static files under `/halves/` (as the portfolio already does) and leaves `/` and `/queued-tanks/` alone.
 - `/halves/api/*` checks the device token and Origin, then forwards to the pair's Durable Object.
@@ -212,9 +236,12 @@ V3 visual work (DESIGN §9.11) runs alongside M1–M3 as skin CSS. It doesn't bl
 | 2 | UI framework | ✅ Svelte 5, for runtime speed and size (T2) |
 | 3 | Pairing | ✅ invite link over WhatsApp, no QR (T7) |
 | 4 | Platform | ✅ web app (PWA) only for now; native revisited later (T13) |
-| 5 | Who sees data | assumed: only the two of you, plus your admin login. ❓ confirm |
+| 5 | Who sees data | ✅ only the two of you, as equal owners; an aggregate view comes later (T7a) |
+| 6 | Domain | ❓ `halves.amlanandanwesha.com` recommended (T7a) |
+| 7 | Access | ✅ device token + approval by an existing device for new devices; a Face ID lock comes later (T7a) |
 
 ## Changelog
+- 2026-11-07 v1.2: T7a security layers + domain moved to amlanandanwesha.com (subdomain).
 - 2026-11-07 v1.1: T5a: invisible sync with retry triggers and the "sync in danger" rule.
 - 2026-11-07 v1: user decisions folded in (git, Svelte, link pairing plus the iOS storage gotcha, PWA-only).
 - 2026-11-07 v0: first breakdown, from TECH-REVIEW v1.1 and the V2 prototype.
