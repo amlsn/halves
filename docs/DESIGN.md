@@ -124,6 +124,7 @@ Mark each **Yes / Later / No**. ★ = I'd recommend for v1.
   - The data model is unchanged (category stays nullable). `limits.target_kind` in Simple mode is just `overall` / `folder`.
 
 ### 9.2b Decision: one-sided by default; split is opt-in per expense (input 2026-11-06)
+> **Superseded for the first cut by [§9.13](#913-decision-for-both--me--partner-replaces-splits-user-2026-11-07)** (For Both / Me / Partner, no splits or settle-up).
 - **New expenses default to "one-sided".** The payer's own spend counts toward the shared log and targets, but creates no debt. Most logs are quick "I spent X" entries.
 - **The split chip leaves the quick chip row.** Splitting stays a short thumb-reach away (a "Split…" control under the chips / in "More"). The editor offers: *One-sided* (default) · *Split %* (V1 slider + presets) · **Decide later**.
 - **Decide later** marks the split as undecided. The item is "to sort" (see §9.2c, which adds a separate *needs review* flag) and is kept out of the balance. Settling waits until they're sorted, or treats them as one-sided.
@@ -275,6 +276,21 @@ Scoped to `html[data-skin="art"]`. art.js does nothing unless that attribute is 
 - Any folder can be pinned, subfolders included: a pin button in the folder header, or long-press → "Pin to Home".
 - Pins are **shared** by both people (the `pinned` field on the synced folder). Per-person pins are an option later.
 - The first nav tab is renamed Folders → **Home**. Back from a root folder goes to Home if it's pinned, otherwise to Folders.
+
+### 9.13 Decision: For Both / Me / Partner replaces splits (user, 2026-11-07)
+- **Principle (user, 2026-11-07):** Halves is a *shared expense tracker*, not a Splitwise clone. Every expense counts toward the shared target, e.g. ₹60k/month, whoever paid it. Rent paid by one person counts for both of us. There is no owing, no settling, and no "who paid" concept in this release. "For" only says whose spend it is, for the breakdown.
+**Supersedes §9.2b (and the split half of §9.2c) for this cut.** Splits may come back later behind a Settings toggle.
+- **Data.** Each expense has `for` ∈ `'both' | 'you' | 'sam'`, default `'both'`. Sync maps `for` to slots like `by`; `'both'` passes through unchanged (`WHO` / `fromSlot` in `app/index.html`). New and re-saved expenses no longer write `paid`, `share` or `sp`.
+  Old docs without `for` are read as: `sp==='one'` → the payer, anything else → `'both'` (`forOf()`). They are migrated only when edited, never rewritten in bulk. A folder can set an optional default `for` (inherited by the folders inside it). The old `split` folder default is ignored.
+- **Add sheet.** The Paid-by chip and the "Split…" control are gone. In their place is ONE 3-way segmented control, **For: Both · Me · <Partner>**, right above the keypad: one tap, with a clear selected state (fill, heavier text and a 2px ring) in all 5 skins. Grab-and-go is unchanged: amount → save stores `'both'` (or the folder default) with no extra taps.
+  Dial order: amount → **for** (3 clamped detents) → cat (Detailed) → date → folder → tags → save. The `paid`/`split` layers and the "Decide later" state are removed. **Finish later** (needs-review) stays.
+- **Removed:** Settle up (sheet, buttons, dial action), all balances / "owes" lines (hero, row meta, folder net, desktop mini balance), the "Split & settle" Settings toggle (`prefs.split`, pair-wide pref), `.split-only` UI, Decide-later queue items, split %, and the folder "Default split" item (now **Default for…**). **To sort = needs-review only.** Existing `settle` docs are still synced so nothing is lost, but they are not shown.
+- **New UI:**
+  - Hero: under the month spend/target there's a slim 3-part bar with worded labels and amounts, "Both ₹x · Me ₹y · <Partner> ₹z". Tapping a part opens Activity filtered to it.
+  - Rows: a who-it's-for marker. Both = two overlapping discs (filled + outlined), Me = filled initial, Partner = outlined initial, so it reads in greyscale. "added by <partner>" shows only when the partner logged it.
+  - Activity: All · Both · Me · <Partner> chips.
+  - Folder header: the same 3-part bar (tap a part to filter the folder list).
+  - Trends: "Who paid" became "Who it's for" (taps open Activity). In Detailed, a For filter applies to the By category / By tag bars. Targets and the Today allowance stay pair-wide totals (not filtered, by design).
 
 ## 8. Changelog
 - 2026-11-06 v0: themes, IA, decisions D1–D8, thumb dial §4, feature list F1–F15. Prototype + wireframes created.

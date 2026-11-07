@@ -499,7 +499,38 @@ html[data-skin="modern"] :is(.ornament,.mascot){display:none}
 .hero-owe{display:flex;align-items:center;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid color-mix(in srgb,var(--hero-on) 14%,transparent);font-size:14px;font-weight:600}
 .hero-owe span:not(.ms){flex:1;min-width:0}.hero-owe .ms{font-size:20px;opacity:.8}
 .hero-owe .pill-btn{height:40px;background:color-mix(in srgb,var(--hero-on) 12%,transparent)}
-html[data-split="off"] .split-only{display:none!important}
+/* §9.13 For: Both · Me · Partner */
+.formk{width:26px;height:26px;flex:none;color:var(--text);display:inline-block;vertical-align:middle}
+.formk.sm{width:18px;height:18px}
+.who.sm{flex:none}
+.formark{display:grid;place-items:center;width:30px;flex:none}
+.row-x .meta>.formeta{display:inline-flex;align-items:center;gap:4px;color:var(--text);font-weight:600}
+.row-x .meta>.formeta .who.sm,.row-x .meta>.formeta .formk.sm{width:16px;height:16px}
+.forbar{margin:14px 0 4px;color:var(--text)}
+.fb-track{display:flex;gap:3px;height:10px;margin:0 2px 8px}
+.fb-track i{display:block;min-width:6px;border-radius:5px}
+.fb-track .fb-you{background:currentColor}
+.fb-track .fb-sam{box-shadow:inset 0 0 0 1.5px currentColor}
+.fb-track .fb-both{background:repeating-linear-gradient(135deg,currentColor 0 2.5px,transparent 2.5px 5.5px);box-shadow:inset 0 0 0 1.5px currentColor}
+.fb-track .fb-none{flex:1;opacity:.25;box-shadow:inset 0 0 0 1.5px currentColor}
+.fb-parts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.fb-p{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:6px;text-align:left;min-height:48px;padding:4px 8px;border-radius:14px;color:inherit;font-size:13px;font-weight:600}
+.fb-p .fb-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fb-p b{grid-column:1/-1;font-size:15px;font-weight:750}
+.fb-p:hover{background:color-mix(in srgb,currentColor 8%,transparent)}
+.fb-p[aria-pressed="true"]{background:color-mix(in srgb,currentColor 12%,transparent);box-shadow:inset 0 0 0 2px currentColor}
+.hero .forbar{color:var(--hero-on);margin:14px 0 0;padding-top:12px;border-top:1px solid color-mix(in srgb,var(--hero-on) 14%,transparent);position:relative}
+.forbar .formk{color:currentColor}
+.fhead-for{margin:14px 2px 4px}
+.chips .chip .who.sm,.chips .chip .formk.sm{margin-right:2px}
+.for-row{display:flex;align-items:center;gap:10px;margin:-2px 0 10px;border-radius:16px}
+.for-row .for-l{font-size:13px;font-weight:700;color:var(--muted);flex:none;padding-left:4px}
+.for-row .seg{flex:1}
+.for-seg button{display:inline-flex;align-items:center;justify-content:center;gap:6px;text-transform:none;height:48px}
+.for-seg button span:not(.who){overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.for-seg button .formk,.chip .formk{color:currentColor}
+.for-seg button[aria-checked="true"]{font-weight:750;box-shadow:inset 0 0 0 2px currentColor}
+.for-row.dial-focus{outline:3px solid var(--primary);outline-offset:3px}
 .split-row{display:flex;justify-content:center;margin:-6px 0 10px}
 .split-ctl{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 6px 0 12px;border-radius:20px;font-size:13px;font-weight:600;color:var(--muted);transition:background .2s,border-radius .4s var(--spring)}
 .split-ctl .ms{font-size:18px}.split-ctl b{color:var(--primary);font-weight:700;padding:0 8px}
@@ -719,11 +750,11 @@ body.gated .app,body.gated .dock,body.gated .dial,body.gated .coach{display:none
 const QS=new URLSearchParams(location.search);
 const NS='halves.'+(QS.get('frame')||'');
 const store={get:k=>{try{return localStorage.getItem(NS+k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(NS+k,v)}catch(e){}}};
-const PREF_OPTS={skin:['modern','poster','ink','neon','art'],motion:['fluid','stop','hybrid'],mode:['simple','detailed'],theme:['auto','light','dark'],split:['on','off'],mascot:['rare','on','off']};
+const PREF_OPTS={skin:['modern','poster','ink','neon','art'],motion:['fluid','stop','hybrid'],mode:['simple','detailed'],theme:['auto','light','dark'],mascot:['rare','on','off']};
 const prefs=(()=>{const p={},cl=v=>Math.max(0,Math.min(2,v));
   for(const k in PREF_OPTS){const u=QS.get(k),s=store.get('pref.'+k);p[k]=PREF_OPTS[k].includes(u)?u:PREF_OPTS[k].includes(s)?s:PREF_OPTS[k][0]}
   const ub=parseFloat(QS.get('bounce')),sb=parseFloat(store.get('pref.bounce'));p.bounce=isFinite(ub)?cl(ub):isFinite(sb)?cl(sb):1;return p})();
-(()=>{const r=document.documentElement;r.dataset.skin=prefs.skin;r.dataset.motion=prefs.motion;r.dataset.mode=prefs.mode;r.dataset.split=prefs.split;r.dataset.mascot=prefs.mascot;
+(()=>{const r=document.documentElement;r.dataset.skin=prefs.skin;r.dataset.motion=prefs.motion;r.dataset.mode=prefs.mode;r.dataset.mascot=prefs.mascot;
   if(prefs.theme!=='auto')r.dataset.theme=prefs.theme;r.style.setProperty('--bounce',prefs.bounce)})();
 </script>
 <script src="skins/ink.js" defer></script>
@@ -735,6 +766,7 @@ const prefs=(()=>{const p={},cl=v=>Math.max(0,Math.min(2,v));
 <!-- Skin filter hooks: placeholders are no-ops (scale 0 / transparent). Skins may override or replace these ids. Motion.boil cycles their seeds. -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
   <filter id="ink-wobble" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="1" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="0" xChannelSelector="R" yChannelSelector="G"/></filter>
+  <mask id="for-m" maskUnits="userSpaceOnUse" x="0" y="0" width="26" height="26"><rect width="26" height="26" fill="#fff"/><circle cx="16.5" cy="15.5" r="9.5" fill="#000"/></mask>
   <filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" seed="1" result="g"/><feColorMatrix in="g" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0 0" result="ga"/><feBlend in="SourceGraphic" in2="ga" mode="multiply"/></filter>
 </defs></svg>
 <div class="proto" id="demoBadge" hidden>DEMO · DATA STAYS IN THIS BROWSER</div>
@@ -835,7 +867,7 @@ const CATS={
   bills:{name:'Bills',icon:'bolt',t:'sun'}, fun:{name:'Fun',icon:'local_activity',t:'lilac'},
   shop:{name:'Shopping',icon:'shopping_bag',t:'coral'}, other:{name:'Other',icon:'category',t:'sage'}};
 let folders=[], expenses=[], settles=[], TAGS=[], targets=[];
-const shared={mode:null,split:null}; // pair-wide prefs (kind "pref"); skin/theme/motion/bounce/dial/mascot stay per device
+const shared={mode:null}; // pair-wide prefs (kind "pref"); skin/theme/motion/bounce/dial/mascot stay per device
 const uid=()=>HalvesSync.rid(12);
 const nowISO=()=>{const d=new Date();return isoL(d)+'T'+pad2(d.getHours())+':'+pad2(d.getMinutes())+':'+pad2(d.getSeconds())};
 const relTime=at=>{if(!at)return'';const m=Math.round((Date.now()-new Date(at))/6e4);if(m<1)return'just now';if(m<60)return m+'m ago';if(m<20*60)return Math.round(m/60)+'h ago';return dayLbl(at.slice(0,10))};
@@ -853,34 +885,40 @@ const F=id=>folders.find(f=>f.id===id);
 const kids=id=>folders.filter(f=>f.parent===id);
 const desc=id=>[id,...kids(id).flatMap(k=>desc(k.id))];
 const path=id=>{const a=[];let f=F(id);while(f){a.unshift(f);f=F(f.parent)}return a};
-// + means Sam owes you
-// V2 §9.2b: one-sided = no debt; 'later' (to sort) = excluded until sorted; legacy rows without sp = split
-const spOf=e=>e.sp||'split';
-const owedBy=e=>spOf(e)!=='split'?0:e.paid==='you'?e.amt*(100-e.share)/100:-e.amt*e.share/100;
-/* V2r1 "to sort" = needs review (no details / "Finish later") OR split undecided. The review half never depends on the split layer. */
-const isLater=e=>prefs.split==='on'&&spOf(e)==='later';
-const isPend=e=>!!e.review||isLater(e);
+/* §9.13: each expense is FOR 'both' | 'you' | 'sam'. No splits, balances or settle-ups in this cut.
+   Legacy docs (no `for`) read as: one-sided ('sp'==='one') → for the payer; anything else → both. Migrated only when edited. */
+const FOR=['both','you','sam'];
+const forOf=e=>FOR.includes(e.for)?e.for:e.sp==='one'&&(e.paid==='you'||e.paid==='sam')?e.paid:'both';
+const forLbl=w=>w==='both'?'Both':w==='you'?'Me':P.sam.name;
+const forA11y=w=>w==='both'?'for both':w==='you'?'for me':'for '+P.sam.name;
+const byOf=e=>e.by||e.paid||'you';
+/* "to sort" = needs review (untitled / Finish later) only */
+const isPend=e=>!!e.review;
 const toSort=()=>expenses.filter(isPend).sort((a,b)=>(a.at||a.date).localeCompare(b.at||b.date)); // oldest first = queue order
-const hasDefSplit=id=>{let f=F(id);while(f){if(f.split!=null)return true;f=F(f.parent)}return false};
-const SP_LBL={one:'One-sided',split:'Split',later:'Decide later'};
 const sortPill=()=>{const n=toSort().length;return n?`<button class="sortq" data-act="sortq" aria-label="${n} to sort, open the queue">${n} to sort${icon('chevron_right')}</button>`:''};
 const UNCAT={name:'Uncategorised',icon:'help',t:'none'};
 const catOf=e=>CATS[e&&e.cat]||UNCAT;
 const ttl=e=>e.title||'Untitled';
-function balance(ids){
-  const set=ids?new Set(ids):null;
-  let b=0;for(const e of expenses)if(!set||set.has(e.folder))b+=owedBy(e);
-  if(!set)for(const s of settles)b+=s.from==='sam'?-s.amt:s.amt;
-  return b}
 const spend=ids=>{const s=new Set(ids);return expenses.filter(e=>s.has(e.folder)).reduce((a,e)=>a+e.amt,0)};
 const dayLbl=d=>{if(d===TODAY)return'Today';const t=new Date(TODAY),x=new Date(d);const diff=(t-x)/864e5;if(diff===1)return'Yesterday';
   return x.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'})};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const buzz=(ms=8)=>{try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
-const netTxt=b=>Math.round(b)===0?'all square':b>0?`${P.sam.name} owes you ${money0(b)}`:`you owe ${P.sam.name} ${money0(-b)}`;
-const splitTxt=sh=>`You ${sh} · ${P.sam.name} ${100-sh}`;
 const parseL=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
 const icon=(n,fill)=>`<span class="ms${fill?' fill':''}" aria-hidden="true">${n}</span>`;
+/* who-it's-for marker (§9.13): Both = two overlapping discs (filled + outlined), Me = filled initial, Partner = outlined initial. Reads in greyscale. */
+const forMark=(w,sm,dot)=>dot&&w!=='both'?`<svg class="formk${sm?' sm':''}" viewBox="0 0 26 26" aria-hidden="true">${w==='you'?'<circle cx="13" cy="13" r="8" fill="currentColor"/>':'<circle cx="13" cy="13" r="7.25" fill="none" stroke="currentColor" stroke-width="1.5"/>'}</svg>`
+  :w==='both'?`<svg class="formk${sm?' sm':''}" viewBox="0 0 26 26" aria-hidden="true"><circle cx="9.5" cy="10.5" r="8" fill="currentColor" mask="url(#for-m)"/><circle cx="16.5" cy="15.5" r="7.25" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`
+  :`<span class="who ${w}${sm?' sm':''}" aria-hidden="true">${P[w].init}</span>`;
+const forSum=list=>{const t={both:0,you:0,sam:0};list.forEach(e=>t[forOf(e)]+=e.amt);return t};
+/* slim 3-part breakdown: proportional bar + worded labels. Parts are buttons (data-who); `cur` marks the active filter. */
+function forBar(list,{label='By who it’s for',cur=null,cls=''}={}){
+  const t=forSum(list),tot=t.both+t.you+t.sam;
+  return `<div class="forbar ${cls}" role="group" aria-label="${esc(label)}">
+    <div class="fb-track" aria-hidden="true">${tot?FOR.filter(w=>t[w]).map(w=>`<i class="fb-${w}" style="flex:${t[w]}"></i>`).join(''):'<i class="fb-none"></i>'}</div>
+    <div class="fb-parts">${FOR.map(w=>`<button class="fb-p" data-who="${w}" ${cur!=null?`aria-pressed="${cur===w}"`:''} aria-label="${esc(forLbl(w))}: ${money0(t[w])}${tot?', '+Math.round(t[w]/tot*100)+'%':''}. Show these">
+      ${forMark(w,1,1)}<span class="fb-n">${esc(forLbl(w))}</span><b class="num">${money0(t[w])}</b></button>`).join('')}</div></div>`;
+}
 
 /* ============ V2: Motion system ============
    --bounce (0–2) → damping of a spring; we sample it into CSS linear() curves.
@@ -993,7 +1031,7 @@ function render(enter){
   $('#main').innerHTML=`<div class="inner">${html}</div>`;
   $('#treepane').innerHTML=vTreePane();
   lastAdded=null;dial.idx=-1;
-  if(enter&&!RM())[...$('#main .inner').querySelectorAll('.hero,.today,.tgt-card,.drill-sum,.tcard,.tree>.node,.list>.row-x,.subtile,.day,.bars,.split-bar')].slice(0,18)
+  if(enter&&!RM())[...$('#main .inner').querySelectorAll('.hero,.today,.tgt-card,.drill-sum,.tcard,.tree>.node,.list>.row-x,.subtile,.day,.bars,:scope>.forbar')].slice(0,18)
     .forEach((e,i)=>{e.style.setProperty('--i',i);e.classList.add('in')});
   requestAnimationFrame(()=>document.querySelectorAll('.bar .fill').forEach(b=>b.style.width=b.dataset.w));
   emit('render',{route});
@@ -1001,17 +1039,11 @@ function render(enter){
 
 /* ============ Views ============ */
 function heroCard(){
-  const b=balance();const a=Math.abs(b);
-  const cls=Math.round(b)===0?'even':b>0?'':'owe';
-  const lbl=cls==='even'?'All square':b>0?`${P.sam.name} owes you`:`You owe ${P.sam.name}`;
-  /* V2 positioning (collaborative log for two): hero leads with the month target; who-owes is a small secondary line */
+  /* V2 positioning (collaborative log for two): hero leads with the month target; §9.13: then a slim Both · Me · Partner breakdown */
   const t=overallT(),s=t&&tStat(t),ti=todayInfo();
-  const monSpent=expenses.filter(e=>e.date.startsWith(MONTH)).reduce((x,e)=>x+e.amt,0);
+  const monL=expenses.filter(e=>e.date.startsWith(MONTH)),monSpent=monL.reduce((x,e)=>x+e.amt,0);
   const mood=!t?'idle':s.st==='over'?'worried':ti&&!ti.ok?'worried':s.st==='warn'?'idle':'happy';
   const w=Math.round(400+Math.min(500,monSpent/100/200));
-  const nLater=expenses.filter(isLater).length;
-  const owe=`<div class="hero-owe split-only">${icon(cls==='even'?'sentiment_very_satisfied':b>0?'call_received':'call_made')}<span>${cls==='even'?'All square':`${lbl} <b class="num">${money0(a)}</b>`}${nLater?`<small style="display:block;opacity:.75;font-weight:500">excl. undecided splits</small>`:''}</span>
-      ${cls==='even'?'':`<button class="pill-btn" data-act="settle">${icon('handshake')} Settle up</button>`}</div>`;
   return `<section class="hero ${t&&s.st==='over'?'over':''}">
     <div class="blob shape"></div>
     <span class="ornament" data-slot="hero" aria-hidden="true"></span>
@@ -1022,8 +1054,8 @@ function heroCard(){
       <div class="pace num">${s.left<0?`Over by ${money0(-s.left)}`:`${money0(s.perDay)}/day left for ${DAYS_LEFT} days`}</div></button>`
     :`<div class="lbl">${icon('receipt_long')} Spent in ${MONTH_NAME}</div><div class="amt num" style="--w:${w}">${money0(monSpent)}</div>
       <button class="pill-btn" data-act="target" data-kind="overall">${icon('flag')} Set a monthly target</button>`}
+    ${forBar(monL,{label:`${MONTH_NAME} by who it’s for`,cls:'hero-for'})}
     ${toSort().length?`<div class="hero-sub">${sortPill()}</div>`:''}
-    ${owe}
   </section>`;
 }
 function tgtCard(t){const s=tStat(t);
@@ -1048,34 +1080,28 @@ function nodeRow(f,depth,opts={}){
 const roots=()=>folders.filter(f=>!f.parent&&!f.archived).sort((a,b)=>(b.pinned|0)-(a.pinned|0));
 const tree=(opts)=>{const ar=folders.filter(f=>f.archived).length;return `<div class="tree ${opts&&opts.pick?'pick-tree':''}" role="tree" aria-label="Folders">${roots().map(f=>nodeRow(f,0,opts||{})).join('')}</div>${ar&&!(opts&&opts.pick)?`<button class="archived" data-act="archived">${icon('inventory_2')} Archived (${ar})</button>`:''}`};
 /* Row = scan unit (§9.1a). Line 1: title + amount (only strong things). Line 2: one muted meta line.
-   Payer = letter disc in the left column (filled = you, outlined = Sam; reads in greyscale). Folder = small caps under the amount.
-   Tags = inline muted #text. Pending = the single accent (left bar + TO SORT). Added-by shows only when it differs from the payer. */
+   Who it's FOR = marker in the left column (Simple) or at the start of the meta line (Detailed): Both = two overlapping discs,
+   Me = filled initial, Partner = outlined initial (reads in greyscale, §9.13). Folder = small caps under the amount.
+   Tags = inline muted #text. Pending = the single accent (left bar + TO SORT). "added by <partner>" only when the partner logged it. */
 function xRow(e,o2={}){
-  const c=catOf(e), o=owedBy(e), f=F(e.folder)||NOF, det=detailed(), sp=spOf(e), pend=isPend(e);
+  const c=catOf(e), f=F(e.folder)||NOF, det=detailed(), pend=isPend(e), w=forOf(e), by=byOf(e);
   const showF=route.v!=='folder'||route.id!==e.folder;
-  const who=o>0?`${P.sam.name} owes ${money0(o)}`:`you owe ${money0(-o)}`;
-  const tg=e.tags||[], disc=(sz)=>`<span class="who ${e.paid}${sz?' sm':''}" aria-hidden="true">${P[e.paid].init}</span>`;
+  const tg=e.tags||[];
   const meta=[pend?`<span class="pendl">To sort</span>`:'',
-    det?disc(1):'',
-    sp==='split'&&prefs.split==='on'?`<span class="num ${o>0?'pos':'neg'}">${who}</span>`:'',
+    det?`<span class="formeta">${forMark(w,1)}${esc(forLbl(w))}</span>`:'',
     tg.length?`<span class="tags">${tg.map(t=>'#'+esc(t)).join(' ')}</span>`:'',
-    e.by&&e.by!==e.paid?`<span class="addby">added by ${P[e.by].name}</span>`:'',
+    by==='sam'?`<span class="addby">added by ${esc(P.sam.name)}</span>`:'',
     o2.since&&e.at?`<span>${relTime(e.at)}</span>`:''].filter(Boolean).join('');
-  const al=`${ttl(e)}, ${money0(e.amt)}, ${P[e.paid].name} paid${showF?', in '+f.name:''}${sp==='split'&&prefs.split==='on'?', '+who:''}${tg.length?', tags '+tg.join(' '):''}${pend?', to sort':''}${e.by?', added by '+P[e.by].name:''}`;
+  const al=`${ttl(e)}, ${money0(e.amt)}, ${forA11y(w)}${showF?', in '+f.name:''}${tg.length?', tags '+tg.join(' '):''}${pend?', to sort':''}${by==='sam'?', added by '+P.sam.name:''}`;
   return `<div class="row-x ${det?'t-'+c.t:'plain'} ${pend?'pend':''} ${lastAdded===e.id?'new':''}" data-x="${e.id}" role="button" tabindex="0" aria-label="${esc(al)}">
-    ${det?`<div class="ic shape">${icon(c.icon,1)}</div>`:disc(0)}
+    ${det?`<div class="ic shape">${icon(c.icon,1)}</div>`:`<span class="formark">${forMark(w)}</span>`}
     <div class="tx"><b class="${e.title?'':'untitled'}">${esc(ttl(e))}</b>${meta?`<small class="meta">${meta}</small>`:''}</div>
     <div class="am"><b class="num">${money0(e.amt)}</b>${showF?`<small class="fol">${esc(f.name)}</small>`:''}</div>
   </div>`;
 }
-function sRow(s){
-  return `<div class="row-x settle split-only"><div class="ic shape" style="--s:var(--sh-cookie9)">${icon('handshake')}</div>
-    <div class="tx"><b>${P[s.from].name} paid ${s.to==='you'?'you':P[s.to].name}</b><small>Settlement · ${s.method}</small></div>
-    <div class="am"><b class="num">${money0(s.amt)}</b></div></div>`;
-}
 function grouped(items){
   const by={};items.sort((a,b)=>b.date.localeCompare(a.date)||(b.at||'').localeCompare(a.at||'')).forEach(i=>(by[i.date]=by[i.date]||[]).push(i));
-  return Object.keys(by).map(d=>`<div class="day">${dayLbl(d)}</div><div class="list">${by[d].map(i=>i.from?sRow(i):xRow(i)).join('')}</div>`).join('');
+  return Object.keys(by).map(d=>`<div class="day">${dayLbl(d)}</div><div class="list">${by[d].map(i=>xRow(i)).join('')}</div>`).join('');
 }
 /* partner view: what the other person logged since you last looked (sits right under the hero on phone) */
 const sinceItems=()=>expenses.filter(e=>e.by==='sam'&&e.at&&e.at>lastSeen).sort((a,b)=>b.at.localeCompare(a.at));
@@ -1111,39 +1137,40 @@ function vHome(){
 }
 function vFolder(id){
   const f=F(id); if(!f)return vHome();
-  const ids=desc(id), ks=kids(id).filter(k=>!k.archived), b=balance(ids);
-  const own=expenses.filter(e=>ids.includes(e.folder));
+  const ids=desc(id), ks=kids(id).filter(k=>!k.archived);
+  const own=expenses.filter(e=>ids.includes(e.folder)), who=FOR.includes(route.who)?route.who:null;
   const ck=e=>e.cat||'none',cc=k=>CATS[k]||UNCAT;
   const cats=[...new Set(own.map(ck))];
-  const shown=own.filter(e=>!catFilter||ck(e)===catFilter);
-  const split=effSplit(id);
+  const shown=own.filter(e=>(!catFilter||ck(e)===catFilter)&&(!who||forOf(e)===who));
+  const df=effFor(id);
   return `<nav class="crumbs" aria-label="Breadcrumb"><button class="crumb" data-nav="home" aria-label="Home">${icon('home')}</button><span class="crumb-sep">${icon('chevron_right')}</span><button class="crumb" data-nav="folders">Folders</button>
     ${path(id).map((p,i,a)=>`<span class="crumb-sep">${icon('chevron_right')}</span><button class="crumb" ${i<a.length-1?`data-open="${p.id}" data-back="1"`:'aria-current="page"'}>${esc(p.name)}</button>`).join('')}</nav>
   <div class="fhead t-${f.t}" style="position:relative"><span class="ornament" data-slot="folder" aria-hidden="true"></span><div class="ic shape">${icon(f.icon,1)}</div>
-    <div style="flex:1"><h1>${esc(f.name)}</h1><div class="meta">Split ${splitTxt(split)}${f.split==null?' (inherited)':''}</div></div>
+    <div style="flex:1"><h1>${esc(f.name)}</h1><div class="meta">${money0(spend(ids))} · ${own.length} expense${own.length===1?'':'s'}${df!=='both'||f.for?` · new ones for ${esc(forLbl(df))}${f.for?'':' (inherited)'}`:''}</div></div>
     <button class="icon-btn pin-btn" data-act="pin" data-id="${id}" aria-pressed="${!!f.pinned}" aria-label="${f.pinned?'Unpin from Home':'Pin to Home'}" style="${f.pinned?'color:var(--primary)':''}">${icon('push_pin',f.pinned?1:0)}</button>
     <button class="icon-btn" data-lp-btn="${id}" aria-label="Folder options">${icon('more_vert')}</button></div>
-  <div class="fnet split-only"><small>${Math.round(b)===0?'Even in this folder':b>0?P.sam.name+' owes you here':'You owe '+P.sam.name+' here'}</small>
-    <b class="num ${b>0?'pos':b<0?'neg':''}">${money0(Math.abs(b))}</b><br><span>${money0(spend(ids))} spent · ${own.length} expenses · before settle-ups</span></div>
+  ${own.length?forBar(own,{label:`${f.name} by who it’s for. Tap to filter`,cur:who,cls:'fhead-for'}):''}
   ${(()=>{const ft=targets.find(t=>t.kind==='folder'&&t.ref===id);if(ft)return tgtCard(ft);
      const ov=overallT();return ov&&id===guessMonthFolder()?tgtCard(ov):''})()}
   ${ks.length?`<h2 class="sec">Inside</h2>
   <div class="subs">${ks.map(k=>`<button class="subtile t-${k.t}" data-open="${k.id}"><div class="ic shape" style="--s:var(--sh-${k.shape})">${icon(k.icon,1)}</div><b>${esc(k.name)}</b><small class="num">${money0(spend(desc(k.id)))}</small></button>`).join('')}
     <button class="subtile add" data-act="newfolder" data-parent="${id}">${icon('create_new_folder')}<small>New folder</small></button></div>`:''}
   ${detailed()&&cats.length>1?`<div class="chips" role="group" aria-label="Filter by category"><button class="chip" aria-pressed="${!catFilter}" data-cat="">All</button>${cats.map(c=>`<button class="chip" aria-pressed="${catFilter===c}" data-cat="${c}">${icon(cc(c).icon)}${cc(c).name}</button>`).join('')}</div>`:''}
-  ${shown.length?grouped(shown):`<div class="empty sm" style="position:relative"><span class="ornament" data-slot="empty" aria-hidden="true"></span><div class="shape">${icon('receipt_long')}</div>Nothing here yet.<br>Tap <b>+</b> to add the first expense${ks.length?'':', or ⋮ → New folder inside'}.</div>`}`;
+  ${shown.length?grouped(shown):who?`<p class="muted" style="margin:16px 4px">Nothing here for ${esc(forLbl(who))} yet.</p>`:`<div class="empty sm" style="position:relative"><span class="ornament" data-slot="empty" aria-hidden="true"></span><div class="shape">${icon('receipt_long')}</div>Nothing here yet.<br>Tap <b>+</b> to add the first expense${ks.length?'':', or ⋮ → New folder inside'}.</div>`}`;
 }
 function vActivity(){
+  const who=FOR.includes(route.who)?route.who:null,L=who?expenses.filter(e=>forOf(e)===who):[...expenses];
   return `<h1 class="ptitle">Activity</h1>
-  <div class="muted">Everything, newest first ${sortPill()}</div>
-  ${grouped([...expenses,...settles])}`;
+  <div class="chips" role="group" aria-label="Show expenses for">${[null,...FOR].map(w=>`<button class="chip" aria-pressed="${who===w}" data-who="${w||''}">${w?forMark(w,1,1):''}${w?esc(forLbl(w)):'All'}</button>`).join('')}</div>
+  <div class="muted">${who?`For ${esc(forLbl(who))} · ${money0(L.reduce((a,e)=>a+e.amt,0))} · newest first`:'Everything, newest first'} ${sortPill()}</div>
+  ${L.length?grouped(L):`<p class="muted" style="margin:16px 4px">${who?`Nothing for ${esc(forLbl(who))} yet.`:'Nothing logged yet. Tap <b>+</b> to add an expense.'}</p>`}`;
 }
 /* ============ V2: Trends (page 3; Insights folded in) ============ */
 function vTrends(){
   if(route.d&&route.d.length)return vDrill(route.d);
   const mon=MONTH;const nov=expenses.filter(e=>e.date.startsWith(mon));
   const tot=nov.reduce((a,e)=>a+e.amt,0)||1;
-  const you=nov.filter(e=>e.paid==='you').reduce((a,e)=>a+e.amt,0);
+  const who=FOR.includes(route.who)?route.who:null,novF=who?nov.filter(e=>forOf(e)===who):nov; // §9.13: For filter on the category/tag bars (Detailed)
   const ti=todayInfo();
   const today=ti?`<section class="today ${ti.ok?'ok':'over'}" aria-live="polite">
       <span class="ornament" data-slot="today" aria-hidden="true"></span>
@@ -1158,9 +1185,10 @@ function vTrends(){
   const vt=visibleTargets();
   let extra='';
   if(detailed()){
-    const by={};nov.forEach(e=>{const k=e.cat||'none';by[k]=(by[k]||0)+e.amt});const CC=k=>CATS[k]||UNCAT;const rows=Object.entries(by).sort((a,b)=>b[1]-a[1]),max=rows[0]?rows[0][1]:1;
-    const bt={};nov.forEach(e=>(e.tags||[]).forEach(t=>bt[t]=(bt[t]||0)+e.amt));const trs=Object.entries(bt).sort((a,b)=>b[1]-a[1]),tmax=trs[0]?trs[0][1]:1;
-    extra=`<h2 class="sec">By category</h2>
+    const by={};novF.forEach(e=>{const k=e.cat||'none';by[k]=(by[k]||0)+e.amt});const CC=k=>CATS[k]||UNCAT;const rows=Object.entries(by).sort((a,b)=>b[1]-a[1]),max=rows[0]?rows[0][1]:1;
+    const bt={};novF.forEach(e=>(e.tags||[]).forEach(t=>bt[t]=(bt[t]||0)+e.amt));const trs=Object.entries(bt).sort((a,b)=>b[1]-a[1]),tmax=trs[0]?trs[0][1]:1;
+    extra=`<div class="chips" role="group" aria-label="Category and tag totals for" style="margin-top:18px">${[null,...FOR].map(w=>`<button class="chip" aria-pressed="${who===w}" data-who="${w||''}" data-inplace="1">${w?forMark(w,1,1):''}${w?esc(forLbl(w)):'All'}</button>`).join('')}</div>
+    <h2 class="sec" style="margin-top:6px">By category${who?` · for ${esc(forLbl(who))}`:''}</h2>
     <div class="bars">${rows.map(([c,v])=>`<div class="bar t-${CC(c).t}">${icon(CC(c).icon)}<div><div style="font-size:13px;font-weight:600;margin-bottom:4px">${CC(c).name}</div><div class="track"><div class="fill" data-w="${(v/max*100).toFixed(1)}%"></div></div></div><b class="num">${money0(v)}</b></div>`).join('')}</div>
     <h2 class="sec">By tag <span class="sp"></span><small style="text-transform:none;letter-spacing:0;font-weight:600">tags can overlap</small></h2>
     <div class="bars">${trs.map(([t,v])=>`<div class="bar t-lilac">${icon('sell')}<div><div style="font-size:13px;font-weight:600;margin-bottom:4px">#${esc(t)}</div><div class="track"><div class="fill" data-w="${(v/tmax*100).toFixed(1)}%"></div></div></div><b class="num">${money0(v)}</b></div>`).join('')}</div>`;
@@ -1173,8 +1201,8 @@ function vTrends(){
     ${ring(s.pct,s.st)}<div class="tx"><b>${esc(tName(t))}</b><small class="num"><span class="stw ${s.st}">${ST_LBL[s.st]}</span> · ${paceTxt(t,s)}</small></div>${spark(t)}</button>`}).join('')
     :`<p class="muted" style="margin:0 4px">No targets yet.</p>`}
   <p class="muted" style="font-size:12px;margin:2px 4px 0">Set a folder target from its ⋮ menu.${detailed()?'':' Category & tag limits live in Detailed mode (Settings).'}</p>
-  <h2 class="sec">Who paid</h2>
-  <div class="split-bar"><div style="flex:${you||1}">You ${money0(you)}</div><div style="flex:${tot-you||1}">${P.sam.name} ${money0(tot-you)}</div></div>
+  <h2 class="sec">Who it’s for</h2>
+  ${forBar(nov,{label:`${MONTH_NAME} by who it’s for. Opens Activity`,cls:'trend-for'})}
   ${extra}`;
 }
 /* drill-down: target → folders → subfolders → tags → expenses; status = own target if one applies, else follows the parent */
@@ -1225,15 +1253,13 @@ function vDrill(d){
   :`<h2 class="sec">Expenses</h2>${grouped([...cur.items])}`}`;
 }
 function vTreePane(){
-  const b=balance();
-  return `${route.v==='home'?'':`<div class="mini-bal split-only"><small>${Math.round(b)===0?'All square':b>0?P.sam.name+' owes you':'You owe '+P.sam.name}</small><b class="num ${b>0?'pos':'neg'}">${money0(Math.abs(b))}</b>
-    <button class="pill-btn tonal" style="margin-top:8px;height:40px" data-act="settle">${icon('handshake')} Settle</button></div>`}
-  ${route.v==='folders'?`<h2>Folders<span class="sp"></span><button class="icon-btn" data-act="newfolder" aria-label="New folder">${icon('create_new_folder')}</button></h2>${tree()}`
+  return `${route.v==='folders'?`<h2>Folders<span class="sp"></span><button class="icon-btn" data-act="newfolder" aria-label="New folder">${icon('create_new_folder')}</button></h2>${tree()}`
    :`<h2>${pinnedF().length?'Pinned':'This month'}<span class="sp"></span><button class="icon-btn" data-nav="folders" aria-label="All folders">${icon('folder_open')}</button></h2>
    <div class="tree" role="tree" aria-label="Pinned folders">${(pinnedF().length?pinnedF():[curMonthF()].filter(Boolean)).map(f=>nodeRow(f,0)).join('')}</div>
    <button class="archived" data-nav="folders">${icon('folder_open')} All folders</button>`}`;
 }
-function effSplit(id){let f=F(id);while(f){if(f.split!=null)return f.split;f=F(f.parent)}return 50}
+/* folder default "for" (§9.13): nearest folder up the chain with `for` set, else 'both'. Old `split` defaults are ignored. */
+function effFor(id){let f=F(id);while(f){if(FOR.includes(f.for))return f.for;f=F(f.parent)}return'both'}
 
 /* ============ Sheet ============ */
 let sheetClose=null;
@@ -1268,7 +1294,7 @@ document.addEventListener('keydown',e=>{
 });
 
 /* ============ Expressive slider ============ */
-function slider(val,onChange,{min=0,max=100,snaps=[50],label='Your share',fmt=v=>splitTxt(v)}={}){
+function slider(val,onChange,{min=0,max=100,snaps=[50],label='Value',fmt=v=>String(v)}={}){
   const el=document.createElement('div');el.className='xs';activeSlider=el;el.setAttribute('role','slider');el.tabIndex=0;
   el.setAttribute('aria-label',label);el.setAttribute('aria-valuemin',min);el.setAttribute('aria-valuemax',max);
   el.innerHTML='<div class="a"></div><div class="h"></div><div class="b"></div>';
@@ -1282,13 +1308,6 @@ function slider(val,onChange,{min=0,max=100,snaps=[50],label='Your share',fmt=v=
   el.addEventListener('keydown',e=>{const k={ArrowLeft:-1,ArrowDown:-1,ArrowRight:1,ArrowUp:1,PageDown:-10,PageUp:10}[e.key];if(k){e.preventDefault();set(v+k)}else if(e.key==='Home')set(min);else if(e.key==='End')set(max)});
   set(val,false);el.set=set;return el;
 }
-function splitLabels(share,amt){
-  const y=amt*share/100,s=amt*(100-share)/100;
-  const w=p=>Math.round(300+p*6);
-  return `<div><small>YOU</small><b class="num" style="--w:${w(share)};color:var(--you-t)">${share}%</b><span class="num">${amt?money(y):''}</span></div>
-          <div><small>${P.sam.name.toUpperCase()}</small><b class="num" style="--w:${w(100-share)};color:var(--sam-t)">${100-share}%</b><span class="num">${amt?money(s):''}</span></div>`;
-}
-
 /* ============ Add / edit expense ============ */
 let draft=null;
 function guessFolder(){
@@ -1299,7 +1318,7 @@ function guessMonthFolder(){
   const mn=parseL(TODAY).toLocaleDateString('en-IN',{month:'long'}),y=TODAY.slice(0,4);
   ensureFolders();
   const yr=folders.find(f=>f.name===y&&!f.archived);const m=folders.find(f=>f.name===mn&&!f.archived&&(!yr||f.parent===yr.id));
-  return m?m.id:(yr||roots()[0]||folders[0]).id;
+  return m?m.id:(yr||roots()[0]||folders[0]||{}).id;
 }
 /* recent distinct short titles (by when logged) → one-tap title chips, so "₹240 coffee" needs no keyboard */
 function recentTitles(n=5){const sc={};const now=new Date(nowISO());
@@ -1309,18 +1328,15 @@ function recentTitles(n=5){const sc={};const now=new Date(nowISO());
 function openAdd(edit,opt={}){
   hideNudge(true); // logging is what the nudge asks for: never cover the sheet with it
   const fid=edit?edit.folder:guessFolder();
-  draft=edit?{...edit,amtS:String(edit.amt/100),tags:[...(edit.tags||[])],sp:spOf(edit),title:edit.title||''}:{id:null,amtS:'0',title:'',cat:null,paid:'you',share:effSplit(fid),folder:fid,date:TODAY,tags:[],sp:hasDefSplit(fid)?'split':'one'};
+  draft=edit?{...edit,amtS:String(edit.amt/100),tags:[...(edit.tags||[])],for:forOf(edit),title:edit.title||''}:{id:null,amtS:'0',title:'',cat:null,for:effFor(fid),folder:fid,date:TODAY,tags:[]};
   draft.mode='keypad';draft.tagCur=-1;draft.q=!!opt.q;draft.tagOrder=null;
-  // finishing a to-sort item: ask "who shares it?" up front (split pane) when the split is still undecided / defaulted
-  if(edit&&opt.finish&&prefs.split==='on'&&draft.sp!=='split')draft.mode='split';
   openSheet(`<button class="icon-btn" data-act="close" aria-label="Close" style="position:absolute;right:12px;top:10px">${icon('close')}</button>
     <div class="amt-disp" id="aeAmt" role="button" tabindex="0" aria-label="Amount, tap for keypad"><span class="cur">₹</span><span class="v num" aria-live="polite"></span></div>
-    <div class="owe-line split-only" id="aeOwe"></div>
     <div class="fx-line" id="aeFx" aria-live="polite"></div>
     <div class="ae-top"><input id="aeTitle" placeholder="What was it for? (optional)" value="${esc(draft.title)}" autocomplete="off" enterkeyhint="send" aria-label="Description. Enter saves"></div>
     <div class="qtitles" id="aeQT" role="group" aria-label="Recent titles"></div>
     <div class="dchips" id="aeChips"></div>
-    <div class="split-row split-only" id="aeSplit"></div>
+    <div class="for-row" id="aeFor"></div>
     <div class="editor" id="aeEd"></div>
     <div class="saverow"><div class="saveaux"><span></span>
       <button class="later-btn" id="aeLater" aria-label="Save now, finish the details later" title="Save now, mark it to sort">${icon('schedule')}<span>Finish later</span></button></div>
@@ -1345,8 +1361,7 @@ const KW={groc:/basket|zepto|blinkit|grocer|milk|veg|dmart/i,food:/dinner|lunch|
 /* folder change on a NEW expense re-applies the folder's defaults only where the user hasn't chosen (careful-flow blocker fix) */
 function folderDefaults(){
   if(draft.id)return;
-  if(!draft.shareTouched)draft.share=effSplit(draft.folder);
-  if(!draft.spTouched)draft.sp=hasDefSplit(draft.folder)?'split':'one';
+  if(!draft.forTouched)draft.for=effFor(draft.folder);
 }
 function autoCat(){if(draft.catTouched)return;for(const k in KW)if(KW[k].test(draft.title)){if(draft.cat!==k){draft.cat=k;aeChips()}return}}
 function amtP(){return Math.round(parseFloat(draft.amtS||'0')*100)||0}
@@ -1356,9 +1371,6 @@ function aeAmt(){
   el.classList.toggle('zero',amtP()===0);
   const n=s.replace('.','').length;
   v.style.setProperty('--w',Math.min(800,300+n*90));v.style.setProperty('--wd',n>6?75:100);
-  const p=amtP(),o=draft.paid==='you'?p*(100-draft.share)/100:p*draft.share/100;
-  if(draft.sp!=='split'){$('#aeOwe').innerHTML=draft.sp==='later'?'Marked <b>to sort</b> — not in the balance yet':`${draft.paid==='you'?'Your':P.sam.name+'’s'} own spend · no one owes`;aeFx();return}
-  $('#aeOwe').innerHTML=p?(draft.paid==='you'?`${P.sam.name} will owe you <b class="num">${money(o)}</b>`:`You'll owe ${P.sam.name} <b class="num">${money(o)}</b>`):'&nbsp;';
   aeFx();
 }
 /* live effect on targets: "Nov target: ₹18,200 left → ₹17,360 left" (red-ish when it would go over) */
@@ -1378,46 +1390,29 @@ function aeChips(){
   const tg=draft.tags;
   $('#aeChips').innerHTML=
     (detailed()?ch('cat',`<span class="bub shape t-${c.t}">${icon(c.icon,1)}</span>${draft.cat?c.name:'Category?'}`):'')+
-    (prefs.split==='on'?(ch('paid',`<span class="bub shape" style="--c:${P[draft.paid].color};--on:#1a0f0a">${P[draft.paid].init}</span>${P[draft.paid].name} paid`)+
-    ''):'')+
     ch('folder',`<span class="bub shape t-${f.t}" style="--s:var(--sh-${f.shape})">${icon(f.icon,1)}</span><span class="sr">Folder: </span>${esc(f.name)}`)+
     ch('tags',`<span class="bub shape">${icon('sell')}</span>${tg.length?esc('#'+tg[0])+(tg.length>1?' +'+(tg.length-1):''):'Tags'}`)+
     ch('date',`<span class="bub shape">${icon('event')}</span>${dayLbl(draft.date)}`);
   $('#aeChips').querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{draft.mode=draft.mode===b.dataset.mode?'keypad':b.dataset.mode;dial.layer=draft.mode==='keypad'?'amount':draft.mode;aeRender();dialUI(true)});
-  const sr=$('#aeSplit');if(sr){const on=draft.mode==='split';
-    sr.innerHTML=`<button class="split-ctl" data-mode="split" aria-pressed="${on}" aria-label="Split: ${SP_LBL[draft.sp]}${draft.sp==='split'?', '+splitTxt(draft.share):''}. Change">${icon(draft.sp==='later'?'pending':draft.sp==='split'?'call_split':'person')}<span>${draft.sp==='split'?splitTxt(draft.share):SP_LBL[draft.sp]}</span><b>Split…</b></button>`;
-    sr.querySelector('button').onclick=()=>{draft.mode=on?'keypad':'split';dial.layer=draft.mode==='keypad'?'amount':'split';aeRender();dialUI(true)}}
+  aeFor();
   aeFx();
+}
+/* §9.13 one 3-way control, always visible right above the keypad: single tap, no sub-pane */
+function aeFor(){const el=$('#aeFor');if(!el||!draft)return;
+  el.classList.toggle('dial-focus',dial.on&&dial.layer==='for');
+  el.innerHTML=`<span class="for-l" id="aeForL">For</span><div class="seg for-seg" role="radiogroup" aria-labelledby="aeForL">${FOR.map(w=>`<button role="radio" data-for="${w}" aria-checked="${draft.for===w}">${forMark(w,1,1)}<span>${esc(forLbl(w))}</span></button>`).join('')}</div>`;
+  el.querySelectorAll('[data-for]').forEach(b=>b.onclick=()=>{draft.for=b.dataset.for;draft.forTouched=1;buzz();aeFor();if(dial.layer==='for')dialUI(true)});
 }
 function aeRender(){aeAmt();aeChips();aeEditor()}
 function aeEditor(){
   const ed=$('#aeEd');const m=draft.mode;
   const done=`<button class="text-btn" data-done>Done</button>`;
-  if(m==='keypad'){
+  if(m==='keypad'||m==='for'){
     ed.innerHTML=`<div class="pane keypad">${['1','2','3','4','5','6','7','8','9','.','0','del'].map(k=>`<button class="key ${k==='.'||k==='del'?'fn':''}" data-k="${k}">${k==='del'?icon('backspace'):k}</button>`).join('')}</div>`;
     ed.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{key(b.dataset.k);});
   }else if(m==='cat'){
     ed.innerHTML=`<div class="pane"><div class="pane-h">Category ${done}</div><div class="catgrid">${Object.entries(CATS).map(([k,c])=>`<button class="catb t-${c.t}" data-c="${k}" aria-pressed="${draft.cat===k}"><span class="ic shape">${icon(c.icon,1)}</span>${c.name}</button>`).join('')}</div></div>`;
     ed.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{draft.cat=b.dataset.c;draft.catTouched=1;buzz();ed.querySelectorAll('[data-c]').forEach(x=>x.setAttribute('aria-pressed',x===b));aeChips();setTimeout(()=>{if(draft&&draft.mode==='cat'){draft.mode='keypad';aeRender()}},420)});
-  }else if(m==='paid'){
-    ed.innerHTML=`<div class="pane"><div class="pane-h">Who paid? ${done}</div><div class="bgroup">${['you','sam'].map(p=>`<button data-p="${p}" style="--pc:${P[p].color};--pcc:var(--${p}-c)" aria-pressed="${draft.paid===p}"><span class="av shape">${P[p].init}</span>${p==='you'?'I paid':P[p].name+' paid'}</button>`).join('')}</div>
-      <p class="muted" style="font-size:13px;text-align:center;margin-top:16px">Both paid part? <u>Coming later</u> — flagged for design review.</p></div>`;
-    ed.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{draft.paid=b.dataset.p;buzz();ed.querySelectorAll('[data-p]').forEach(x=>x.setAttribute('aria-pressed',x===b));aeChips();aeAmt()});
-  }else if(m==='split'){
-    const segS=`<div class="seg" role="radiogroup" aria-label="Split mode" style="margin-bottom:12px">${['one','split','later'].map(v=>`<button role="radio" data-spm="${v}" aria-checked="${draft.sp===v}" style="text-transform:none">${v==='split'?'Split %':SP_LBL[v]}</button>`).join('')}</div>`;
-    const wire=()=>ed.querySelectorAll('[data-spm]').forEach(b=>b.onclick=()=>{draft.sp=b.dataset.spm;draft.spTouched=1;buzz();aeEditor();aeChips();aeAmt();dialUI(true)});
-    if(draft.sp!=='split'){ed.innerHTML=`<div class="pane"><div class="pane-h">Split? ${done}</div>${segS}
-      <p class="muted" style="font-size:13px;text-align:center;margin:14px 8px 0">${draft.sp==='one'?'One-sided: counts toward your shared log and targets, but nobody owes anything.':'Decide later: logged now, marked <b>to sort</b>, and kept out of the balance until you sort it.'}</p></div>`;
-      activeSlider=null;wire();const dn0=ed.querySelector('[data-done]');if(dn0)dn0.onclick=()=>{draft.mode='keypad';aeRender()};return}
-    ed.innerHTML=`<div class="pane xs-wrap"><div class="pane-h">How to split ${done}</div>${segS}<div class="xs-labels" id="xsl"></div><div id="xsHost"></div>
-      <div class="presets">${[[50,'Half'],[60,'You 60'],[100,'All mine'],[0,'All '+P.sam.name+'’s']].map(([v,l])=>`<button class="chip" data-sv="${v}">${l}</button>`).join('')}</div>
-      <p class="muted" style="font-size:12px;text-align:center;margin:12px 0 0">Folder default: ${splitTxt(effSplit(draft.folder))} · snaps at 0 / 50 / 100 and the default</p></div>`;
-    const lab=()=>$('#xsl').innerHTML=splitLabels(draft.share,amtP());lab();
-    // any slider / preset / dial change marks the split as the user's own → a later folder pick must not reset it
-    const s=slider(draft.share,v=>{draft.share=v;draft.shareTouched=1;lab();aeAmt();aeChips()},{snaps:[0,50,100,effSplit(draft.folder)]});
-    $('#xsHost').appendChild(s);wire();
-    ed.querySelectorAll('[data-sv]').forEach(b=>b.onclick=()=>{s.set(+b.dataset.sv)});
-    $('#aeAmt').onclick=()=>{draft.mode='keypad';aeRender();dialUI(true)};
   }else if(m==='folder'){
     ed.innerHTML=`<div class="pane"><div class="pane-h">Put it in ${done}</div><div style="max-height:250px;overflow:auto">${tree({pick:true,forceOpen:true})}</div></div>`;
     ed.querySelectorAll('[data-pick]').forEach(n=>{if(n.dataset.pick===draft.folder)n.classList.add('active');n.onclick=()=>{draft.folder=n.dataset.pick;folderDefaults();buzz();draft.mode='keypad';aeRender()}});
@@ -1464,8 +1459,9 @@ function saveDraft(later){
   const btn=$('#aeSave');btn.classList.add('done');btn.querySelector('span').textContent='';const lb=$('#aeLater');if(lb)lb.style.display='none';
   const isEdit=!!draft.id;const prevRec=isEdit?{...expenses.find(e=>e.id===draft.id)}:null;
   const title=draft.title.trim(),review=later||!title; // V2r2: an untitled entry stays to sort, new or edited
-  const rec={id:draft.id||uid(),folder:draft.folder,title,amt:p,paid:draft.paid,share:draft.share,cat:draft.cat,date:draft.date,tags:[...draft.tags],sp:draft.sp,
-    review,by:isEdit?(prevRec.by||'you'):'you',at:isEdit?(prevRec.at||nowISO()):nowISO()};
+  // §9.13: no paid/share/sp on new or re-saved docs (an edit migrates a legacy doc); `by` keeps who logged it
+  const rec={id:draft.id||uid(),folder:draft.folder,title,amt:p,for:FOR.includes(draft.for)?draft.for:'both',cat:draft.cat,date:draft.date,tags:[...draft.tags],
+    review,by:isEdit?byOf(prevRec):'you',at:isEdit?(prevRec.at||nowISO()):nowISO()};
   const inQ=draft.q;
   setTimeout(()=>{ // short hold so the button morph reads; money is committed well under 200ms
     if(isEdit){const i=expenses.findIndex(e=>e.id===rec.id);if(i>=0)expenses[i]=rec;else expenses.push(rec)}else expenses.push(rec);
@@ -1483,68 +1479,55 @@ function saveDraft(later){
 }
 
 /* ============ Other sheets ============ */
-/* V2r2 sorting rules
-   - resolve: 'ok' (mark sorted) | 'one' (payer's own) | 'split' (folder default). Review only clears if the item HAS a title:
-     an untitled entry stays "to sort" until someone adds details (no ticking away an empty row).
+/* V2r2 sorting rules (§9.13: review only, no split decisions)
+   - resolve 'ok' (mark sorted) only clears review if the item HAS a title: an untitled entry stays "to sort" until someone adds details.
    - you can't one-tap sort the partner's untitled entry: the queue says "<Sam>'s to finish"; the detail asks for confirmation.
-   - every resolve snacks its money effect, in words (D5): "Villa → split 50/50 · you owe Sam ₹9,300 more".
    - One by one never reopens an item it already showed (qSeen). */
 let qSeen=new Set();
-const ownLbl=e=>e.paid==='you'?'Your own':`${P[e.paid].name}’s own`;
-function resolveSort(e,a){
+function resolveSort(e){
   const prev={...e};
-  if(a==='one')e.sp='one';else if(a==='split'){e.sp='split';e.share=effSplit(e.folder)}
   if(e.title)e.review=false;buzz(10);
   return()=>{Object.assign(e,prev);if(!prev.review)delete e.review;render()};
 }
-function effectTxt(e,a,b0){
-  const d=balance()-b0,lbl=a==='one'?ownLbl(e).toLowerCase():a==='split'?`split ${e.share}/${100-e.share}`:'sorted';
-  const m=Math.round(d)===0||prefs.split!=='on'?'':d>0?` · ${P.sam.name} owes you ${money0(d)} more`:` · you owe ${P.sam.name} ${money0(-d)} more`;
-  return `${ttl(e)} → ${lbl}${m}${isPend(e)?' · still needs details':''}`;
-}
+const effectTxt=e=>`${ttl(e)} → sorted${isPend(e)?' · still needs details':''}`;
 const nextInQ=()=>toSort().find(x=>!qSeen.has(x.id));
-function afterResolve(e,a,b0,undo,q){
+function afterResolve(e,undo,q){
   render();const nx=q?nextInQ():null,n=toSort().length;
-  snack(effectTxt(e,a,b0)+(n?` · ${n} left`:''),undo);pulseHero();
+  snack(effectTxt(e)+(n?` · ${n} left`:''),undo);pulseHero();
   if(nx)setTimeout(()=>openDetail(nx.id,true),300);
 }
-function pulseHero(){requestAnimationFrame(()=>{const h=$('#main .hero-owe,#main .hero');if(h&&h.animate&&!RM())h.animate([{transform:'scale(1)'},{transform:'scale(1.025)'},{transform:'scale(1)'}],{duration:420,easing:'ease-out'})})}
+function pulseHero(){requestAnimationFrame(()=>{const h=$('#main .hero');if(h&&h.animate&&!RM())h.animate([{transform:'scale(1)'},{transform:'scale(1.025)'},{transform:'scale(1)'}],{duration:420,easing:'ease-out'})})}
 function openDetail(id,q){
   const e=expenses.find(x=>x.id===id);if(!e)return;if(q)qSeen.add(e.id);
-  const c=catOf(e),det=detailed(),pend=isPend(e),later=isLater(e),theirs=e.by&&e.by!=='you',untitled=!e.title;
-  const Q=toSort(),qi=Q.indexOf(e),ds=effSplit(e.folder);
-  const why=[e.review?(e.title?'Flagged to finish later.':`Logged without details${theirs?` by ${P[e.by].name}`:''}.`):'',later?'Split not decided, so it isn’t in the balance yet.':''].filter(Boolean).join(' ');
-  const shareBtns=`<button class="pill-btn" data-res="one">${icon('person')} ${ownLbl(e)}</button><button class="pill-btn" data-res="split">${icon('call_split')} ${ds===50?'Split 50/50':`Split ${ds}/${100-ds}`}</button>`;
-  const detBtn=`<button class="pill-btn ${untitled?'filled':'tonal'}" data-edit="${e.id}" ${untitled&&theirs?'data-confirm="1"':''}>${icon('edit_note')} ${untitled&&theirs?`Add details for ${P[e.by].name}`:'Add details'}</button>`;
+  const c=catOf(e),det=detailed(),pend=isPend(e),by=byOf(e),theirs=by!=='you',untitled=!e.title,w=forOf(e);
+  const Q=toSort(),qi=Q.indexOf(e);
+  const why=e.title?'Flagged to finish later.':`Logged without details${theirs?` by ${P[by].name}`:''}.`;
+  const detBtn=`<button class="pill-btn ${untitled?'filled':'tonal'}" data-edit="${e.id}" ${untitled&&theirs?'data-confirm="1"':''}>${icon('edit_note')} ${untitled&&theirs?`Add details for ${P[by].name}`:'Add details'}</button>`;
   const box=pend?`<div class="sortbox"><div class="sb-h"><span class="pendl">To sort</span>${q&&qi>=0?`<span class="muted">${qi+1} of ${Q.length}</span>`:''}</div><p>${why}</p>
-    <div class="sb-act">${later?shareBtns:untitled?'':`<button class="pill-btn filled" data-res="ok">${icon('check')} Mark sorted</button>`}${detBtn}</div>
-    ${untitled&&theirs?`<p style="margin:8px 0 0;font-size:12.5px">${P[e.by].name} logged this, so it’s usually theirs to finish.</p>`:''}</div>`:'';
+    <div class="sb-act">${untitled?'':`<button class="pill-btn filled" data-res="ok">${icon('check')} Mark sorted</button>`}${detBtn}</div>
+    ${untitled&&theirs?`<p style="margin:8px 0 0;font-size:12.5px">${P[by].name} logged this, so it’s usually theirs to finish.</p>`:''}</div>`:'';
   openSheet(`${box}<div class="det-hero t-${c.t}">${det?`<div class="ic shape">${icon(c.icon,1)}</div>`:''}<div style="font-weight:650" class="${e.title?'':'untitled'}">${esc(ttl(e))}</div><div class="v num">${money(e.amt)}</div>
      ${(e.tags||[]).length?`<div style="display:flex;gap:6px;justify-content:center;margin:6px 0">${e.tags.map(t=>`<span class="tagc" style="font-size:13px;padding:4px 10px">#${esc(t)}</span>`).join('')}</div>`:''}
      <div class="muted" style="font-size:14px">${path(e.folder).map(f=>esc(f.name)).join(' › ')} · ${dayLbl(e.date)}</div></div>
-    ${spOf(e)==='split'?`<div class="xs-labels split-only">${splitLabels(e.share,e.amt)}</div>
-    <div class="split-bar split-only" style="height:20px;margin:4px 0 16px"><div style="flex:${e.share||.001};padding:0"></div><div style="flex:${100-e.share||.001};padding:0"></div></div>`:''}
-    <div class="kv"><div><span>Paid by</span><b style="display:flex;align-items:center;gap:8px"><span class="who sm ${e.paid}" aria-hidden="true">${P[e.paid].init}</span>${P[e.paid].name}</b></div>
-      <div><span>Added by</span><b>${P[e.by||e.paid].name}${e.at?' · '+relTime(e.at):''}</b></div>${det?`<div><span>Category</span><b>${c.name}</b></div>`:''}
-      ${spOf(e)!=='split'?`<div class="split-only"><span>Split</span><b>${spOf(e)==='one'?ownLbl(e):SP_LBL[spOf(e)]}</b></div>`:''}<div class="split-only" ${spOf(e)!=='split'?'style="display:none"':''}><span>${owedBy(e)>0?P.sam.name+' owes you':'You owe '+P.sam.name}</span><b class="num ${owedBy(e)>0?'pos':'neg'}">${money(Math.abs(owedBy(e)))}</b></div></div>
+    <div class="kv"><div><span>For</span><b style="display:flex;align-items:center;gap:8px">${forMark(w,1)}${esc(forLbl(w))}</b></div>
+      <div><span>Added by</span><b>${esc(P[by].name)}${e.at?' · '+relTime(e.at):''}</b></div>${det?`<div><span>Category</span><b>${c.name}</b></div>`:''}</div>
     <div class="actions"><button class="pill-btn" data-del="${e.id}">${icon('delete')} Delete</button>${pend?(q&&nextInQ()?`<button class="pill-btn" data-skip>${icon('skip_next')} Skip</button>`:''):`<button class="pill-btn tonal" data-edit="${e.id}">${icon('edit')} Edit</button>`}</div>`,
   b=>{b.querySelectorAll('[data-edit]').forEach(x=>x.onclick=()=>{
-       if(x.dataset.confirm&&!x.dataset.armed){x.dataset.armed=1;x.innerHTML=`${icon('help')} Tap again to edit ${P[e.by].name}’s entry`;buzz(10);return}
+       if(x.dataset.confirm&&!x.dataset.armed){x.dataset.armed=1;x.innerHTML=`${icon('help')} Tap again to edit ${P[by].name}’s entry`;buzz(10);return}
        closeSheet();setTimeout(()=>openAdd(e,{q,finish:pend}),250)});
      const sk=b.querySelector('[data-skip]');if(sk)sk.onclick=()=>{const nx=nextInQ();closeSheet();if(nx)setTimeout(()=>openDetail(nx.id,true),260)};
-     b.querySelectorAll('[data-res]').forEach(x=>x.onclick=()=>{const b0=balance(),a=x.dataset.res,undo=resolveSort(e,a);closeSheet();afterResolve(e,a,b0,undo,q)});
+     b.querySelectorAll('[data-res]').forEach(x=>x.onclick=()=>{const undo=resolveSort(e);closeSheet();afterResolve(e,undo,q)});
      b.querySelector('[data-del]').onclick=()=>{const i=expenses.indexOf(e);expenses.splice(i,1);closeSheet();render();snack('Expense deleted',()=>{expenses.splice(i,0,e);render()})}});
 }
 /* To-sort queue: oldest first, inline one-tap actions per row, or step through one by one ("next" flow via the detail sheet) */
 function openSortQ(){
   if(!toSort().length){snack('Nothing to sort');return}
   qSeen=new Set();
-  const row=e=>{const later=isLater(e),ds=effSplit(e.folder),theirs=e.by&&e.by!=='you',untitled=!e.title;
-    const act=later?`<button class="chip" data-sqr="one" data-id="${e.id}">${ownLbl(e)}</button><button class="chip" data-sqr="split" data-id="${e.id}" aria-label="Split ${ds} / ${100-ds}">${ds}/${100-ds}</button>`
-      :untitled?(theirs?`<span class="sq-note">${P[e.by].name}’s to finish</span>`:`<button class="chip" data-sqo="${e.id}">${icon('edit_note')}Details</button>`)
+  const row=e=>{const by=byOf(e),theirs=by!=='you',untitled=!e.title;
+    const act=untitled?(theirs?`<span class="sq-note">${esc(P[by].name)}’s to finish</span>`:`<button class="chip" data-sqo="${e.id}">${icon('edit_note')}Details</button>`)
       :`<button class="chip" data-sqr="ok" data-id="${e.id}" aria-label="Mark sorted">${icon('check')}Sorted</button>`;
     return`<div class="sq-row"><button class="sq-main" data-sqo="${e.id}"><b class="${e.title?'':'untitled'}">${esc(ttl(e))}</b>
-      <small><span class="num">${money0(e.amt)}</span> · ${dayLbl(e.date)} · ${P[e.by||e.paid].name} · ${later?'split?':e.title?'finish later':'no details'}</small></button>
+      <small><span class="num">${money0(e.amt)}</span> · ${dayLbl(e.date)} · ${esc(forLbl(forOf(e)))} · ${e.title?'finish later':'no details'}${theirs?' · by '+esc(P[by].name):''}</small></button>
       <div class="sq-act">${act}</div></div>`};
   openSheet(`<h3>To sort</h3><p class="muted" style="margin:-8px 4px 12px;font-size:14px" id="sqSub"></p><div class="sq" id="sqList"></div>
     <button class="save" id="sqGo">${icon('arrow_forward')}<span>One by one</span></button>`,
@@ -1554,7 +1537,7 @@ function openSortQ(){
       $('#sqList').innerHTML=L.map(row).join('');
       b.querySelectorAll('[data-sqo]').forEach(x=>x.onclick=()=>{qSeen=new Set();closeSheet();setTimeout(()=>openDetail(x.dataset.sqo,true),260)});
       b.querySelectorAll('[data-sqr]').forEach(x=>x.onclick=()=>{const e=expenses.find(y=>y.id===x.dataset.id);if(!e)return;
-        const b0=balance(),a=x.dataset.sqr,undo=resolveSort(e,a);render();paint();const n=toSort().length;snack(effectTxt(e,a,b0)+(n?` · ${n} left`:''),undo)});
+        const undo=resolveSort(e);render();paint();const n=toSort().length;snack(effectTxt(e)+(n?` · ${n} left`:''),undo)});
       return true};
     paint();
     b.querySelector('#sqGo').onclick=()=>{qSeen=new Set();const L=toSort();closeSheet();if(L.length)setTimeout(()=>openDetail(L[0].id,true),260)};
@@ -1587,37 +1570,13 @@ function openNewFolder(parent,keep){
     };
   });
 }
-function openSettle(){
-  const b=balance();const max=Math.abs(b);if(Math.round(max)===0){snack('Nothing to settle — you’re square ✨');return}
-  const st={amt:Math.round(max),method:'UPI'};
-  const who=b>0?`${P.sam.name} pays you`:`You pay ${P.sam.name}`;
-  openSheet(`<h3>Settle up</h3>
-    <div class="det-hero"><div class="muted" style="font-weight:600">${who}</div>
-      <label class="v num" style="display:inline-flex;align-items:baseline;gap:2px;cursor:text">₹<input id="stIn" inputmode="decimal" aria-label="Amount to settle" style="border:0;background:none;font:inherit;width:6.5ch;text-align:left;color:inherit;padding:0"></label>
-      <div class="muted" id="stSub" style="font-size:14px"></div></div>
-    <div class="xs-wrap"><div id="stS"></div></div>
-    <div class="presets">${['UPI','Cash','Bank'].map(m=>`<button class="chip" data-m="${m}" aria-pressed="${m==='UPI'}">${m}</button>`).join('')}</div>
-    ${expenses.filter(isLater).length?`<p class="muted" style="font-size:12px;text-align:center"><span class="sortc">${expenses.filter(isLater).length} with split undecided</span> aren’t in this balance yet.</p>`:''}<p class="muted" style="font-size:12px;text-align:center">Drag for a part-payment or type an exact amount. Settles across all folders (Q3).</p>
-    <button class="save" id="stGo">${icon('handshake')}<span>Record payment</span></button>`,
-  body=>{
-    const inp=body.querySelector('#stIn');
-    const upd=(fromInput)=>{const pct=Math.round(st.amt/max*100);if(!fromInput)inp.value=inr.format(Math.round(st.amt/100));
-      inp.style.width=Math.max(3,inp.value.length+.5)+'ch';
-      $('#stSub').textContent=st.amt>=Math.round(max)?'Full balance':`${pct}% of ${money0(max)}`};
-    const s=slider(100,v=>{st.amt=Math.round(max*v/100);upd()},{snaps:[25,50,75,100],label:'Settle amount',fmt:v=>v+'% of balance'});body.querySelector('#stS').appendChild(s);
-    s.querySelector('.a').style.background='var(--primary)';s.querySelector('.b').style.background='var(--s3)';upd();
-    inp.oninput=()=>{const v=Math.min(max,Math.round(parseFloat(inp.value.replace(/,/g,''))*100)||0);st.amt=v;s.set(v/max*100,false);upd(true)};
-    body.querySelectorAll('[data-m]').forEach(x=>x.onclick=()=>{st.method=x.dataset.m;body.querySelectorAll('[data-m]').forEach(y=>y.setAttribute('aria-pressed',y===x))});
-    body.querySelector('#stGo').onclick=()=>{if(!st.amt)return;const sid=uid();settles.push({id:sid,from:b>0?'sam':'you',to:b>0?'you':'sam',amt:st.amt,date:TODAY,method:st.method,by:'you',at:nowISO()});closeSheet();confetti(28);render();snack('Payment recorded 🎉',()=>{settles=settles.filter(x=>x.id!==sid);render()})};
-  });
-}
 function openFolderMenu(id){
   const f=F(id);buzz(20);
   openSheet(`<h3 style="display:flex;align-items:center;gap:10px"><span class="shape t-${f.t}" style="--s:var(--sh-${f.shape});width:36px;height:36px;display:grid;place-items:center;background:var(--c);color:var(--on)">${icon(f.icon,1)}</span>${esc(f.name)}</h3>
     <div class="menu-list">
       <button data-m="add">${icon('add_card')} Add expense here</button>
       <button data-m="sub">${icon('create_new_folder')} New folder inside</button>
-      <button data-m="split">${icon('tune')} Default split for this folder</button>
+      <button data-m="for">${icon('group')} Default for… <span style="margin-left:auto;color:var(--muted);font-weight:600">${esc(forLbl(effFor(id)))}${f.for?'':' (inherited)'}</span></button>
       <button data-m="tgt">${icon('flag')} ${targets.some(t=>t.kind==='folder'&&t.ref===id)?'Edit target':'Set target'}</button>
       <button data-m="ren">${icon('edit')} Rename</button>
       <button data-m="mv">${icon('drive_file_move')} Move to…</button>
@@ -1626,7 +1585,7 @@ function openFolderMenu(id){
     </div>`,
   b=>{b.querySelectorAll('[data-m]').forEach(x=>x.onclick=()=>{const m=x.dataset.m;closeSheet();
     setTimeout(()=>{if(m==='add'){route.v==='folder'&&route.id===id||go({v:'folder',id});setTimeout(()=>openAdd(),100)}
-      else if(m==='sub')openNewFolder(id);else if(m==='split')openFolderSplit(id);else if(m==='tgt')openTarget({kind:'folder',ref:id});
+      else if(m==='sub')openNewFolder(id);else if(m==='for')openFolderFor(id);else if(m==='tgt')openTarget({kind:'folder',ref:id});
       else if(m==='ren')openRename(id);else if(m==='mv')openMove(id);
       else if(m==='pin'){f.pinned=!f.pinned;render();snack(f.pinned?'Pinned to Home':'Unpinned')}
       else if(m==='arc'){f.archived=1;if(route.v==='folder'&&desc(id).includes(route.id))go({v:'home'},'back');else render();snack(`“${f.name}” archived`,()=>{f.archived=0;render()})}},260)})});
@@ -1651,22 +1610,24 @@ function openRename(id){const f=F(id);
   openSheet(`<h3>Rename</h3><label class="field"><span>Name</span><input type="text" id="rnIn" value="${esc(f.name)}" autocomplete="off"></label><button class="save" id="rnGo">${icon('check')}<span>Save</span></button>`,
   b=>{const i=b.querySelector('#rnIn');setTimeout(()=>{i.focus();i.select()},300);const go2=()=>{if(!i.value.trim())return;f.name=i.value.trim();closeSheet();render()};
     b.querySelector('#rnGo').onclick=go2;i.onkeydown=e=>{if(e.key==='Enter')go2()}})}
-function openFolderSplit(id){
-  const f=F(id);let v=effSplit(id);
-  openSheet(`<h3>Default split · ${esc(f.name)}</h3><p class="muted" style="margin:-6px 4px 14px;font-size:14px">New expenses in this folder <b>and every folder inside it</b> start with this split. Subfolders can override.</p>
-    <div class="xs-wrap"><div class="xs-labels" id="fsl"></div><div id="fsS"></div></div><button class="save" id="fsGo">${icon('check')}<span>Save default</span></button>`,
-  b=>{const lab=()=>$('#fsl').innerHTML=splitLabels(v,0);lab();b.querySelector('#fsS').appendChild(slider(v,n=>{v=n;lab()}));
-    b.querySelector('#fsGo').onclick=()=>{f.split=v;closeSheet();render();snack(`Default split ${splitTxt(v)} saved`)}});
+/* §9.13 folder default "for": new expenses in this folder (and folders inside it, unless they set their own) start with it */
+function openFolderFor(id){
+  const f=F(id),par=f.parent?effFor(f.parent):'both';let v=f.for||null;
+  const opts=[[null,`Same as ${f.parent?'parent':'default'} (${forLbl(par)})`],...FOR.map(w=>[w,forLbl(w)])];
+  openSheet(`<h3>Default for · ${esc(f.name)}</h3><p class="muted" style="margin:-6px 4px 14px;font-size:14px">New expenses here are for… Folders inside follow it unless they set their own. You can still change it on each expense.</p>
+    <div class="menu-list" role="radiogroup" aria-label="New expenses here are for">${opts.map(([w,l])=>`<button role="radio" data-fd="${w||''}" aria-checked="${v===w}">${w?forMark(w,1,1):icon('subdirectory_arrow_right')} ${esc(l)}${v===w?`<span class="ms" style="margin-left:auto;color:var(--primary)" aria-hidden="true">check</span>`:''}</button>`).join('')}</div>`,
+  b=>b.querySelectorAll('[data-fd]').forEach(x=>x.onclick=()=>{const old=f.for;v=x.dataset.fd||null;if(v)f.for=v;else delete f.for;closeSheet();render();
+    snack(v?`New expenses in ${f.name}: for ${forLbl(v)}`:`${f.name} follows ${f.parent?'its parent':'the default'}`,()=>{if(old)f.for=old;else delete f.for;render()})}));
 }
 
 /* ============ V2: Settings (skin · motion · bounce · mode · dial · theme · reminders) ============ */
-function applyPrefs(){const r=document.documentElement;r.dataset.skin=prefs.skin;r.dataset.motion=prefs.motion;r.dataset.mode=prefs.mode;r.dataset.split=prefs.split;r.dataset.mascot=prefs.mascot;
+function applyPrefs(){const r=document.documentElement;r.dataset.skin=prefs.skin;r.dataset.motion=prefs.motion;r.dataset.mode=prefs.mode;r.dataset.mascot=prefs.mascot;
   if(prefs.theme==='auto')delete r.dataset.theme;else r.dataset.theme=prefs.theme;Motion.apply();
   const tc=document.querySelector('meta[name=theme-color]');if(tc)tc.content=getComputedStyle(r).getPropertyValue('--bg').trim()||'#FFF8F4'}
 function setPref(k,v){
-  prefs[k]=v;store.set('pref.'+k,String(v));if(k in shared)shared[k]=v; // mode + split are pair-wide (synced)
+  prefs[k]=v;store.set('pref.'+k,String(v));if(k in shared)shared[k]=v; // mode is pair-wide (synced)
   if(QS.has(k)){QS.delete(k);try{history.replaceState(history.state,'',location.pathname+(QS.toString()?'?'+QS:'')+location.hash)}catch(e){}}
-  applyPrefs();if(k==='mode'||k==='split')render();
+  applyPrefs();if(k==='mode')render();
   emit('prefs',{key:k,value:v,prefs:{...prefs}});
 }
 function toggleTheme(){const r=document.documentElement;const dark=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches;setPref('theme',dark?'light':'dark')}
@@ -1684,7 +1645,6 @@ function openSettings(){
     <div class="set-row"><span class="l">Mascot</span>${segH('mascot',PREF_OPTS.mascot,['Rare','Always','Off'])}<div class="hint">Rare: only when something changes (just saved, over target) and on reminders.</div></div>
     <div class="set-h">App</div>
     <div class="set-row"><span class="l">Mode</span>${segH('mode',PREF_OPTS.mode,['Simple','Detailed'])}<div class="hint">Simple: one flat list with tags, overall &amp; folder targets. Detailed adds categories, filters and category/tag limits.</div></div>
-    <div class="set-line"><span>Split &amp; settle<small class="muted" style="display:block;font-weight:500;font-size:12px">Who paid, splits, balances, Settle up</small></span><button class="switch" role="switch" aria-checked="${prefs.split==='on'}" id="setSplit" aria-label="Split and settle"></button></div>
     <div class="set-line">Thumb dial<button class="switch" role="switch" aria-checked="${dial.on}" id="setDial" aria-label="Thumb dial"></button></div>
     <div class="set-line">Monthly target<button class="pill-btn" id="setTgt">${overallT()?money0(overallT().amt):'Not set'} ${icon('chevron_right')}</button></div>
     <div class="set-h">Pair &amp; devices</div>
@@ -1704,7 +1664,6 @@ function openSettings(){
     s.querySelector('.a').style.background='var(--primary)';s.querySelector('.b').style.background='var(--s3)';
     s.addEventListener('pointerup',()=>{kickT=0;kick()});
     $('#bHost').appendChild(s);bv.textContent=prefs.bounce.toFixed(2)+'×';
-    $('#setSplit').onclick=e=>{setPref('split',prefs.split==='on'?'off':'on');e.currentTarget.setAttribute('aria-checked',prefs.split==='on');buzz()};
     $('#setDial').onclick=e=>{setDial(!dial.on);e.currentTarget.setAttribute('aria-checked',dial.on)};
     $('#setTgt').onclick=()=>{closeSheet();setTimeout(()=>openTarget({kind:'overall'}),260)};
     $('#setInvite').onclick=()=>{closeSheet();setTimeout(invite,260)};
@@ -1858,7 +1817,7 @@ document.addEventListener('click',e=>{
     const node=el.closest('.node');node.classList.toggle('open');const k=node.nextElementSibling;if(k&&k.classList.contains('kids')){const o=k.classList.toggle('open');k.inert=!o;node.setAttribute('aria-expanded',o);el.setAttribute('aria-label',(o?'Collapse ':'Expand ')+F(id).name)}buzz(4);return}
   if(t.closest('#sheet')&&!t.closest('[data-act="close"]'))return;
   if(el=t.closest('[data-act]')){const a=el.dataset.act;
-    if(a==='add')openAdd();else if(a==='settle')openSettle();else if(a==='newfolder')openNewFolder(el.dataset.parent||null);
+    if(a==='add')openAdd();else if(a==='newfolder')openNewFolder(el.dataset.parent||null);
     else if(a==='close')closeSheet();else if(a==='archived')openArchived();else if(a==='dial')setDial(!dial.on);else if(a==='search')snack('Search is coming soon');
     else if(a==='theme')toggleTheme();else if(a==='settings')openSettings();else if(a==='newlimit')openNewLimit();
     else if(a==='target')openTarget({kind:el.dataset.kind,ref:el.dataset.ref||null});
@@ -1873,6 +1832,11 @@ document.addEventListener('click',e=>{
   if(el=t.closest('[data-trail]'))return go({v:'trends',d:(route.d||[]).slice(0,+el.dataset.trail)},'back');
   if(el=t.closest('[data-nav]'))return go({v:el.dataset.nav},navDir(el.dataset.nav));
   if(el=t.closest('[data-cat]')){catFilter=el.dataset.cat||null;render();return}
+  /* §9.13 For filter: Activity chips / folder header / Trends chips filter in place (folder parts toggle); hero & Trends bar open Activity filtered */
+  if(el=t.closest('[data-who]')){const w=el.dataset.who||null;buzz(6);
+    if(route.v==='activity'||(route.v==='trends'&&el.dataset.inplace)){route.who=w;render()}
+    else if(route.v==='folder'){route.who=route.who===w?null:w;render()}
+    else go({v:'activity',who:w},navDir('activity'));return}
   if(el=t.closest('[data-x]'))return openDetail(el.dataset.x);
   if(el=t.closest('.hero .amt')){el.style.setProperty('--wd',60);buzz(10);setTimeout(()=>el.style.removeProperty('--wd'),180)}
 });
@@ -1889,18 +1853,18 @@ const dial={on:store.get('dial')==null?!fine:store.get('dial')==='1',left:store.
 const STEPS=[1,10,100,500];
 const LAY={
   items:{ic:'ads_click',name:'Move',det:24}, sections:{ic:'tab',name:'Sections',det:36}, actions:{ic:'bolt',name:'Quick actions',det:36},
-  amount:{ic:'currency_rupee',name:'Amount',det:15,adj:1}, split:{ic:'call_split',name:'Split',det:10,adj:1}, paid:{ic:'person',name:'Paid by',det:30,adj:1},
+  amount:{ic:'currency_rupee',name:'Amount',det:15,adj:1}, for:{ic:'group',name:'For',det:30,adj:1},
   cat:{ic:'category',name:'Category',det:30,adj:1}, date:{ic:'event',name:'Date',det:24,adj:1}, folder:{ic:'folder',name:'Folder',det:30,adj:1},
   tags:{ic:'sell',name:'Tags',det:30,adj:1},
   save:{ic:'done_all',name:'Save',det:999,commit:1}, later:{ic:'schedule',name:'Finish later',det:999,commit:1}, slider:{ic:'linear_scale',name:'Adjust',det:10,adj:1}};
 const SECTIONS=[['home','Folders'],['activity','Activity'],['trends','Trends']];
-const ACTIONS=()=>[['add','Add expense','add'],...(toSort().length?[['sortq',`To sort (${toSort().length})`,'checklist']]:[]),...(prefs.split==='on'?[['settle','Settle up','handshake']]:[]),['newfolder','New folder','create_new_folder'],['back','Back','arrow_back'],
+const ACTIONS=()=>[['add','Add expense','add'],...(toSort().length?[['sortq',`To sort (${toSort().length})`,'checklist']]:[]),['newfolder','New folder','create_new_folder'],['back','Back','arrow_back'],
   ['settings','Settings','settings'],['theme','Light / dark','contrast'],['sound',dial.sound?'Dial click: on':'Dial click: off','volume_up'],['hand',dial.left?'Dial: left hand':'Dial: right hand','swap_horiz']];
-const tapOrder=()=>dialLayers().filter(l=>!(draft&&(l==='split'||l==='later'))); // §9.2b: Split (and Finish later) only via hold menu
+const tapOrder=()=>dialLayers().filter(l=>!(draft&&l==='later')); // Finish later only via the hold menu
 const sheetOpen=()=>$('#sheet').classList.contains('on');
 const canCommit=()=>sheetOpen()&&(draft?(dial.layer==='amount'||dial.layer==='save'||dial.layer==='later'):(dial.layer==='slider'&&!!$('#sheetBody .save')));
 function dialLayers(){
-  if(sheetOpen()){if(draft)return['amount',...(prefs.split==='on'?['paid','split']:[]),...(detailed()?['cat']:[]),'date','folder','tags','save','later'];if(activeSlider)return['slider','items'];return['items']}
+  if(sheetOpen()){if(draft)return['amount','for',...(detailed()?['cat']:[]),'date','folder','tags','save','later']; /* §9.13 order */if(activeSlider)return['slider','items'];return['items']}
   return['items','sections','actions'];
 }
 (()=>{let h='';for(let i=0;i<24;i++)h+=`<i style="transform:rotate(${i*15}deg)"></i>`;$('#dialTicks').innerHTML=h})();
@@ -1913,7 +1877,7 @@ function dialCtx(){
 }
 function stops(){
   const root=sheetOpen()?'#sheetBody':'#main';
-  const sel=sheetOpen()?'button,input,[role="button"]':'[data-open],[data-x],[data-act],[data-nav],[data-cat],[data-lp-btn],[data-drill],[data-trail]';
+  const sel=sheetOpen()?'button,input,[role="button"]':'[data-open],[data-x],[data-act],[data-nav],[data-cat],[data-who],[data-lp-btn],[data-drill],[data-trail]';
   return[...document.querySelectorAll(`${root} :is(${sel})`)].filter(e=>e.offsetParent!==null&&!e.closest('.kids:not(.open)')&&!e.closest('[data-tog]'));
 }
 function clearFocus(){document.querySelectorAll('.dial-focus').forEach(e=>e.classList.remove('dial-focus'))}
@@ -1930,9 +1894,9 @@ function dialUI(show,sub){
   else if(dial.layer==='sections'){val=SECTIONS[secIdx()][1];hint='Turn to switch'}
   else if(dial.layer==='actions'){const a=ACTIONS()[dial.actIdx];val=a[1];hint='Tap: run'}
   else if(draft){const tl=tagList(),ct=tl[draft.tagCur];
-    val={amount:money(amtP()),split:draft.sp==='split'?splitTxt(draft.share):SP_LBL[draft.sp],paid:P[draft.paid].name+' paid',cat:catOf(draft).name,date:dayLbl(draft.date),folder:(F(draft.folder)||NOF).name,
+    val={amount:money(amtP()),for:'For '+forLbl(draft.for),cat:catOf(draft).name,date:dayLbl(draft.date),folder:(F(draft.folder)||NOF).name,
       tags:ct?`#${ct} · ${draft.tags.includes(ct)?'on':'off'}`:(draft.tags.length?draft.tags.map(t=>'#'+t).join(' '):'No tags'),save:amtP()?'Ready':'Add an amount first',later:amtP()?'Save, sort later':'Add an amount first'}[dial.layer];
-    const L2=tapOrder(),nx=LAY[L2[(L2.indexOf(dial.layer==='split'?'paid':dial.layer)+1)%L2.length]].name; // split isn't in the tap order: it hands on as Paid does
+    const L2=tapOrder(),nx=LAY[L2[(L2.indexOf(dial.layer)+1)%L2.length]].name;
     hint=dial.layer==='save'?'Double-tap: save':dial.layer==='later'?'Double-tap: save for later':dial.layer==='tags'?(ct?`Press ring: toggle · centre: next (${nx})`:`Turn to pick · centre: next (${nx})`):`Tap: next (${nx})${dial.layer==='amount'?' · double-tap: save':''}`}
   else if(dial.layer==='slider'){val=activeSlider?activeSlider.getAttribute('aria-valuetext'):'';hint='Double-tap: confirm'}
   $('#dialLayer').textContent=L.name;$('#dialVal').textContent=val;$('#dialSub').textContent=sub||hint;
@@ -1963,9 +1927,9 @@ function dialStep(n){
   else if(l==='actions'){const A=ACTIONS();dial.actIdx=(dial.actIdx+n+A.length)%A.length;dialUI(true)}
   else if(l==='amount'){const st=dial.step,cur=amtP()/100;let v=cur+n*st;if(st>1)v=n>0?Math.floor(v/st)*st:Math.ceil(v/st)*st;v=Math.max(0,Math.min(99999999,v));
     draft.amtS=String(Math.round(v*100)/100);aeAmt();dialUI(true,`${n>0?'+':'−'}₹${st} per click`)}
-  else if(l==='split'&&draft&&draft.sp!=='split'){const M=['one','split','later'];draft.sp=M[(M.indexOf(draft.sp)+n+3)%3];draft.spTouched=1;aeEditor();aeChips();aeAmt();quiet();dialUI(true)}
-  else if(l==='split'||l==='slider'){if(activeSlider)activeSlider.set(+activeSlider.getAttribute('aria-valuenow')+n);dialUI(true)}
-  else if(l==='paid'){const np=n>0?'sam':'you';if(draft.paid!==np){draft.paid=np;aeChips();aeAmt();aeEditor();quiet()}dialUI(true)}
+  else if(l==='for'&&draft){const i=Math.max(0,Math.min(2,FOR.indexOf(draft.for)+n)); // 3 detents, clamped: Both · Me · Partner
+    if(FOR[i]!==draft.for){draft.for=FOR[i];draft.forTouched=1;aeFor()}dialUI(true)}
+  else if(l==='slider'){if(activeSlider)activeSlider.set(+activeSlider.getAttribute('aria-valuenow')+n);dialUI(true)}
   else if(l==='cat'){const k=Object.keys(CATS);draft.cat=k[(k.indexOf(draft.cat)+n+k.length)%k.length];draft.catTouched=1;aeChips();aeEditor();quiet();dialUI(true)}
   else if(l==='date'){const d=parseL(draft.date);d.setDate(d.getDate()+n);const s2=isoL(d);if(s2>TODAY)return;draft.date=s2;aeChips();aeEditor();quiet();dialUI(true)}
   else if(l==='tags'){const tl=tagList();if(!tl.length)return;draft.tagCur=draft.tagCur<0?(n>0?0:tl.length-1):(draft.tagCur+n+tl.length)%tl.length;
@@ -1986,7 +1950,7 @@ function dialTap(){
   if(l==='items'){const el=stops()[dial.idx];if(el){clearFocus();el.focus&&el.focus({preventScroll:true});el.click();setTimeout(()=>dialUI(true),60)}else if(!sheetOpen())openAdd();else dialUI(true)}
   else if(l==='sections')dialUI(true);
   else if(l==='actions'){const a=ACTIONS()[dial.actIdx][0];
-    if(a==='add')openAdd();else if(a==='sortq')openSortQ();else if(a==='settle')openSettle();else if(a==='newfolder')openNewFolder(route.v==='folder'?route.id:null);
+    if(a==='add')openAdd();else if(a==='sortq')openSortQ();else if(a==='newfolder')openNewFolder(route.v==='folder'?route.id:null);
     else if(a==='back'){if(route.v==='folder'){const f=F(route.id);go(f.parent?{v:'folder',id:f.parent}:f.pinned?{v:'home'}:{v:'folders'},'back')}else if(route.v==='trends'&&route.d&&route.d.length)go({v:'trends',d:route.d.slice(0,-1)},'back');else go({v:'home'},'back')}
     else if(a==='theme')toggleTheme();else if(a==='settings')openSettings();
     else if(a==='sound'){dial.sound=!dial.sound;store.set('sound',dial.sound?'1':'0')}
@@ -1994,7 +1958,7 @@ function dialTap(){
     dialUI(true)}
   else if(l==='save'||l==='later'||l==='slider'){$('#dialBub').classList.remove('pulse');void $('#dialBub').offsetWidth;$('#dialBub').classList.add('pulse');dialUI(true,l==='slider'?'Double-tap to confirm':'Double-tap to save')}
   else if(draft){ // every field layer (Tags included) advances on tap; tags toggle with a ring press / Space
-    const L=tapOrder();setLayer(L[(Math.max(0,L.indexOf(l==='split'?'paid':l))+1)%L.length])}
+    const L=tapOrder();setLayer(L[(Math.max(0,L.indexOf(l))+1)%L.length])}
 }
 /* ring press (on the ring band, no turn) in the Tags layer toggles the focused tag; elsewhere it counts as a centre tap */
 function dialToggleTag(){if(!draft||dial.layer!=='tags'||draft.tagCur<0)return false;const t=tagList()[draft.tagCur];if(!t)return false;
@@ -2142,7 +2106,7 @@ const IOS=/iPad|iPhone|iPod/.test(UA)||(navigator.platform==='MacIntel'&&navigat
 const STANDALONE=navigator.standalone===true||matchMedia('(display-mode: standalone)').matches;
 const myName=()=>names[ME]||(auth&&auth.name)||'You';
 const toSlot=w=>w==='you'?ME:w==='sam'?OTHER:w;
-const fromSlot=s=>s==null?s:s===ME?'you':'sam';
+const fromSlot=s=>s==null||s==='both'?s:s===ME?'you':'sam'; // 'both' (expense.for) passes through
 function setPeople(n,slot){
   names={};for(const k in n||{}){const v=n[k];names[k]=String(v&&typeof v==='object'?v.name:v||'').trim()}
   ME=slot==='B'?'B':'A';OTHER=ME==='A'?'B':'A';
@@ -2152,7 +2116,7 @@ function setPeople(n,slot){
 
 /* ---- the adapter sync.js talks to: plain arrays in, slot-mapped docs out ---- */
 const ARR={folder:()=>folders,expense:()=>expenses,settle:()=>settles,target:()=>targets};
-const WHO={expense:['paid','by'],settle:['from','to','by']};
+const WHO={expense:['for','by','paid'],settle:['from','to','by']}; // 'paid' only on legacy docs; settles are no longer created (§9.13)
 const outDoc=(x,kind)=>{const d={...x};delete d.id;(WHO[kind]||[]).forEach(k=>{if(k in d)d[k]=toSlot(d[k])});return d};
 const adapter={
   collect(){const out={};for(const k in ARR){const m=out[k]={};for(const x of ARR[k]())m[x.id]=outDoc(x,k)}
@@ -2191,7 +2155,7 @@ function ensureFolders(){
      Runs on first sync and whenever a log needs a month folder, so January gets its new year automatically. Never resurrects a year the user deleted/renamed (per-device marker). */
   const y=TODAY.slice(0,4),id='y'+y,mk='halves.autoyear.'+y;
   if(folders.some(f=>f.id===id||(f.name===y&&!f.parent)))return;
-  try{if(localStorage.getItem(mk))return;localStorage.setItem(mk,'1')}catch(e){}
+  try{if(folders.some(f=>!f.archived)&&localStorage.getItem(mk))return;localStorage.setItem(mk,'1')}catch(e){} // never leave a device with zero folders
   folders.push({id,name:y,parent:null,icon:'calendar_month',shape:'cookie9',t:'coral'});
   const T=['coral','teal','lilac','sun','sage','sky'],S=['cookie9','clover','flower','sunny','cookie6','cookie4'];
   ['January','February','March','April','May','June','July','August','September','October','November','December'].forEach((m,i)=>folders.push({id:id+'m'+i,name:m,parent:id,icon:'calendar_today',shape:S[i%6],t:T[i%6]}));
