@@ -743,7 +743,7 @@ const prefs=(()=>{const p={},cl=v=>Math.max(0,Math.min(2,v));
   <nav class="rail" aria-label="Primary">
     <div class="brand-i shape"></div>
     <button class="fab shape" data-act="add" aria-label="Add expense"><span class="ms">add</span></button>
-    <button class="tb" data-nav="home"><span class="ms">folder_open</span><span class="lbl">Folders</span></button>
+    <button class="tb" data-nav="home"><span class="ms">home</span><span class="lbl">Home</span></button>
     <button class="tb" data-nav="activity"><span class="ms">receipt_long</span><span class="lbl">Activity</span></button>
     <button class="tb" data-nav="trends"><span class="ms">trending_up</span><span class="lbl">Trends</span></button>
     <div class="sp"></div>
@@ -762,10 +762,10 @@ const prefs=(()=>{const p={},cl=v=>Math.max(0,Math.min(2,v));
 </div>
 <div class="dock">
   <div class="toolbar">
-    <button class="tb" data-nav="home"><span class="ms">folder_open</span><span class="lbl">Folders</span></button>
+    <button class="tb" data-nav="home"><span class="ms">home</span><span class="lbl">Home</span></button>
     <button class="tb" data-nav="activity"><span class="ms">receipt_long</span><span class="lbl">Activity</span></button>
     <div class="pdots" role="group" aria-label="Pages (swipe to switch)">
-      <button class="pdot" data-nav="home" aria-label="Page 1 of 3: Folders"></button>
+      <button class="pdot" data-nav="home" aria-label="Page 1 of 3: Home"></button>
       <button class="pdot" data-nav="activity" aria-label="Page 2 of 3: Activity"></button>
       <button class="pdot" data-nav="trends" aria-label="Page 3 of 3: Trends"></button>
     </div>
@@ -983,13 +983,13 @@ function go(r,dir='fwd',fromPop){
   if(document.startViewTransition&&!RM()){const vt=document.startViewTransition(run);vt.ready&&vt.ready.catch(()=>{});vt.finished&&vt.finished.catch(()=>{})}else run();
 }
 const PAGES=['home','activity','trends'];
-const pageOf=v=>v==='folder'?'home':v==='insights'?'trends':v;
+const pageOf=v=>v==='folder'||v==='folders'?'home':v==='insights'?'trends':v;
 const navDir=to=>PAGES.indexOf(pageOf(to))>PAGES.indexOf(pageOf(route.v))?'fwd':'back';
 function render(enter){
   if(route.v==='insights')route={v:'trends'};
   const v=route.v,pg=pageOf(v);
   document.querySelectorAll('[data-nav]').forEach(b=>b.setAttribute('aria-current',String(b.dataset.nav===pg)));
-  const html=v==='home'?vHome():v==='folder'?vFolder(route.id):v==='activity'?vActivity():vTrends();
+  const html=v==='home'?vHome():v==='folders'?vFolders():v==='folder'?vFolder(route.id):v==='activity'?vActivity():vTrends();
   $('#main').innerHTML=`<div class="inner">${html}</div>`;
   $('#treepane').innerHTML=vTreePane();
   lastAdded=null;dial.idx=-1;
@@ -1084,14 +1084,28 @@ function sinceCard(){
   return `<section class="since"><h2 class="sec">New from ${P.sam.name} · ${L.length}<span class="sp"></span><button class="text-btn" data-act="seen">Mark seen</button></h2>
     <div class="list">${L.slice(0,3).map(e=>xRow(e,{since:1})).join('')}</div>${L.length>3?`<button class="text-btn" data-nav="activity">+${L.length-3} more in Activity</button>`:''}</section>`;
 }
+/* Home shows only pinned folders (user, 2026-11-07); the full tree lives on its own "Folders" screen.
+   Nothing pinned yet → show this month's folder as the single suggestion, plus a "Pin folders" tile. */
+const pinnedF=()=>folders.filter(f=>f.pinned&&!f.archived);
+function curMonthF(){const mn=parseL(TODAY).toLocaleDateString('en-IN',{month:'long'}),y=TODAY.slice(0,4);
+  const yr=folders.find(f=>f.name===y&&!f.parent&&!f.archived);return folders.find(f=>f.name===mn&&!f.archived&&(!yr||f.parent===yr.id))}
+function fTile(f){const pa=f.parent&&F(f.parent);
+  return `<button class="subtile t-${f.t}" data-open="${f.id}"><div class="ic shape" style="--s:var(--sh-${f.shape})">${icon(f.icon,1)}</div><b>${esc(f.name)}</b><small class="num">${pa?esc(pa.name)+' · ':''}${money0(spend(desc(f.id)))}</small></button>`}
+function pinnedStrip(){const pins=pinnedF(),cur=curMonthF(),list=pins.length?pins:(cur?[cur]:[]);
+  return `<h2 class="sec">${pins.length?'Pinned':'This month'}<span class="sp"></span><button class="text-btn" data-nav="folders">All folders</button></h2>
+  <div class="subs">${list.map(fTile).join('')}${pins.length?'':`<button class="subtile add" data-nav="folders">${icon('push_pin')}<small>Pin folders</small></button>`}</div>`}
+function vFolders(){
+  return `<nav class="crumbs" aria-label="Breadcrumb"><button class="crumb" data-nav="home" aria-label="Home">${icon('home')}</button><span class="crumb-sep">${icon('chevron_right')}</span><button class="crumb" aria-current="page">Folders</button></nav>
+  <h2 class="sec">Folders<span class="sp"></span><button class="text-btn" data-act="newfolder">+ New folder</button></h2>
+  <p class="muted" style="margin:-4px 4px 12px;font-size:13px">${icon('push_pin')} Pin a folder (long-press it, or the pin in the folder) to put it on Home.</p>
+  ${tree()}`}
 function vHome(){
   const shown=new Set(sinceItems().slice(0,3).map(e=>e.id)); // don't repeat what "New from Sam" already shows
   const recent=[...expenses].filter(e=>!shown.has(e.id)).sort((a,b)=>(b.at||b.date).localeCompare(a.at||a.date)).slice(0,3); // by when logged
   return `${heroCard()}
   ${dangerLine()}
   ${sinceCard()}
-  <div class="hide-desk"><h2 class="sec">Folders<span class="sp"></span><button class="text-btn" data-act="newfolder">+ New folder</button></h2>
-  ${tree()}</div>
+  <div class="hide-desk">${pinnedStrip()}</div>
   <h2 class="sec">Latest<span class="sp"></span><button class="text-btn" data-nav="activity">See all</button></h2>
   <div class="list">${recent.map(xRow).join('')}</div>`;
 }
@@ -1103,10 +1117,11 @@ function vFolder(id){
   const cats=[...new Set(own.map(ck))];
   const shown=own.filter(e=>!catFilter||ck(e)===catFilter);
   const split=effSplit(id);
-  return `<nav class="crumbs" aria-label="Breadcrumb"><button class="crumb" data-nav="home" aria-label="Home">${icon('home')}</button>
+  return `<nav class="crumbs" aria-label="Breadcrumb"><button class="crumb" data-nav="home" aria-label="Home">${icon('home')}</button><span class="crumb-sep">${icon('chevron_right')}</span><button class="crumb" data-nav="folders">Folders</button>
     ${path(id).map((p,i,a)=>`<span class="crumb-sep">${icon('chevron_right')}</span><button class="crumb" ${i<a.length-1?`data-open="${p.id}" data-back="1"`:'aria-current="page"'}>${esc(p.name)}</button>`).join('')}</nav>
   <div class="fhead t-${f.t}" style="position:relative"><span class="ornament" data-slot="folder" aria-hidden="true"></span><div class="ic shape">${icon(f.icon,1)}</div>
     <div style="flex:1"><h1>${esc(f.name)}</h1><div class="meta">Split ${splitTxt(split)}${f.split==null?' (inherited)':''}</div></div>
+    <button class="icon-btn pin-btn" data-act="pin" data-id="${id}" aria-pressed="${!!f.pinned}" aria-label="${f.pinned?'Unpin from Home':'Pin to Home'}" style="${f.pinned?'color:var(--primary)':''}">${icon('push_pin',f.pinned?1:0)}</button>
     <button class="icon-btn" data-lp-btn="${id}" aria-label="Folder options">${icon('more_vert')}</button></div>
   <div class="fnet split-only"><small>${Math.round(b)===0?'Even in this folder':b>0?P.sam.name+' owes you here':'You owe '+P.sam.name+' here'}</small>
     <b class="num ${b>0?'pos':b<0?'neg':''}">${money0(Math.abs(b))}</b><br><span>${money0(spend(ids))} spent · ${own.length} expenses · before settle-ups</span></div>
@@ -1213,7 +1228,10 @@ function vTreePane(){
   const b=balance();
   return `${route.v==='home'?'':`<div class="mini-bal split-only"><small>${Math.round(b)===0?'All square':b>0?P.sam.name+' owes you':'You owe '+P.sam.name}</small><b class="num ${b>0?'pos':'neg'}">${money0(Math.abs(b))}</b>
     <button class="pill-btn tonal" style="margin-top:8px;height:40px" data-act="settle">${icon('handshake')} Settle</button></div>`}
-  <h2>Folders<span class="sp"></span><button class="icon-btn" data-act="newfolder" aria-label="New folder">${icon('create_new_folder')}</button></h2>${tree()}`;
+  ${route.v==='folders'?`<h2>Folders<span class="sp"></span><button class="icon-btn" data-act="newfolder" aria-label="New folder">${icon('create_new_folder')}</button></h2>${tree()}`
+   :`<h2>${pinnedF().length?'Pinned':'This month'}<span class="sp"></span><button class="icon-btn" data-nav="folders" aria-label="All folders">${icon('folder_open')}</button></h2>
+   <div class="tree" role="tree" aria-label="Pinned folders">${(pinnedF().length?pinnedF():[curMonthF()].filter(Boolean)).map(f=>nodeRow(f,0)).join('')}</div>
+   <button class="archived" data-nav="folders">${icon('folder_open')} All folders</button>`}`;
 }
 function effSplit(id){let f=F(id);while(f){if(f.split!=null)return f.split;f=F(f.parent)}return 50}
 
@@ -1603,14 +1621,14 @@ function openFolderMenu(id){
       <button data-m="tgt">${icon('flag')} ${targets.some(t=>t.kind==='folder'&&t.ref===id)?'Edit target':'Set target'}</button>
       <button data-m="ren">${icon('edit')} Rename</button>
       <button data-m="mv">${icon('drive_file_move')} Move to…</button>
-      ${f.parent?'':`<button data-m="pin">${icon('push_pin')} ${f.pinned?'Unpin':'Pin to top'}</button>`}
+      <button data-m="pin">${icon('push_pin')} ${f.pinned?'Unpin from Home':'Pin to Home'}</button>
       <button data-m="arc">${icon('inventory_2')} Archive</button>
     </div>`,
   b=>{b.querySelectorAll('[data-m]').forEach(x=>x.onclick=()=>{const m=x.dataset.m;closeSheet();
     setTimeout(()=>{if(m==='add'){route.v==='folder'&&route.id===id||go({v:'folder',id});setTimeout(()=>openAdd(),100)}
       else if(m==='sub')openNewFolder(id);else if(m==='split')openFolderSplit(id);else if(m==='tgt')openTarget({kind:'folder',ref:id});
       else if(m==='ren')openRename(id);else if(m==='mv')openMove(id);
-      else if(m==='pin'){f.pinned=!f.pinned;render();snack(f.pinned?'Pinned':'Unpinned')}
+      else if(m==='pin'){f.pinned=!f.pinned;render();snack(f.pinned?'Pinned to Home':'Unpinned')}
       else if(m==='arc'){f.archived=1;if(route.v==='folder'&&desc(id).includes(route.id))go({v:'home'},'back');else render();snack(`“${f.name}” archived`,()=>{f.archived=0;render()})}},260)})});
 }
 function pickerSheet(title,exclude,cur,onPick){
@@ -1845,6 +1863,7 @@ document.addEventListener('click',e=>{
     else if(a==='theme')toggleTheme();else if(a==='settings')openSettings();else if(a==='newlimit')openNewLimit();
     else if(a==='target')openTarget({kind:el.dataset.kind,ref:el.dataset.ref||null});
     else if(a==='sortq')openSortQ();
+    else if(a==='pin'){const f=F(el.dataset.id);if(f){f.pinned=!f.pinned;render();snack(f.pinned?'Pinned to Home':'Unpinned')}}
     else if(a==='seen'){lastSeen=nowISO();store.set(SEEN_K,lastSeen);render();snack('Marked seen')}
     else if(a==='trysync'){HalvesSync.tryNow();snack('Trying to sync now…')}
     return}
@@ -1968,7 +1987,7 @@ function dialTap(){
   else if(l==='sections')dialUI(true);
   else if(l==='actions'){const a=ACTIONS()[dial.actIdx][0];
     if(a==='add')openAdd();else if(a==='sortq')openSortQ();else if(a==='settle')openSettle();else if(a==='newfolder')openNewFolder(route.v==='folder'?route.id:null);
-    else if(a==='back'){if(route.v==='folder'){const f=F(route.id);go(f.parent?{v:'folder',id:f.parent}:{v:'home'},'back')}else if(route.v==='trends'&&route.d&&route.d.length)go({v:'trends',d:route.d.slice(0,-1)},'back');else go({v:'home'},'back')}
+    else if(a==='back'){if(route.v==='folder'){const f=F(route.id);go(f.parent?{v:'folder',id:f.parent}:f.pinned?{v:'home'}:{v:'folders'},'back')}else if(route.v==='trends'&&route.d&&route.d.length)go({v:'trends',d:route.d.slice(0,-1)},'back');else go({v:'home'},'back')}
     else if(a==='theme')toggleTheme();else if(a==='settings')openSettings();
     else if(a==='sound'){dial.sound=!dial.sound;store.set('sound',dial.sound?'1':'0')}
     else if(a==='hand'){dial.left=!dial.left;store.set('left',dial.left?'1':'0');document.body.classList.toggle('dial-left',dial.left)}

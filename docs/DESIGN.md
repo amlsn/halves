@@ -269,6 +269,13 @@ Scoped to `html[data-skin="art"]`. art.js does nothing unless that attribute is 
   - Make the AA check apply to text drawn over the effects, not just against the base colour.
 - **Fixed now:** the Settings skin picker showed "Undefined" for Neon and Art (labels were missing). It now shows the labels plus hint text.
 
+### 9.12 Decision: Home shows pinned folders only (user, 2026-11-07)
+- The folder tree is no longer on Home. It has its own **Folders** screen, reached from "All folders" on Home, the desktop side pane, or the breadcrumb.
+- Home shows **Pinned**: a row of folder tiles with the parent name and spend. With nothing pinned, it shows **This month** (the current month folder) plus a "Pin folders" tile.
+- Any folder can be pinned, subfolders included: a pin button in the folder header, or long-press → "Pin to Home".
+- Pins are **shared** by both people (the `pinned` field on the synced folder). Per-person pins are an option later.
+- The first nav tab is renamed Folders → **Home**. Back from a root folder goes to Home if it's pinned, otherwise to Folders.
+
 ## 8. Changelog
 - 2026-11-06 v0: themes, IA, decisions D1–D8, thumb dial §4, feature list F1–F15. Prototype + wireframes created.
 - 2026-11-06 v1: review round 1 → D2/D5 revised, D9–D10 added, dial §4 rewritten (see [REVIEW-LOG.md](REVIEW-LOG.md)).
