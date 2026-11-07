@@ -45,7 +45,7 @@
   - `shared/`: types, money maths and the sync protocol. Both sides import it, so they can never disagree.
 - TypeScript strict, Vitest for tests, Biome or ESLint+Prettier for lint, and `wrangler` for local dev and deploy. The `prototype-v*/` folders stay as frozen references.
 - Local dev: `pnpm dev` runs Vite (app) and `wrangler dev` (Worker + DO + local SQLite) together. Phone testing works over the LAN like now, with no tunnels.
-- ✅ It's a git repo now (`main`), with the repo-local identity `Amlan Sahoo <amlan.sahoo.98@gmail.com>`, the same as `personal-website`. No remote yet. The GitHub `omlin` repo gets created by the user, then `git remote add origin git@github.com:omlin/<name>.git` (SSH config already maps github.com to `id_ed25519_omlin`).
+- ✅ It's a git repo now (`main`), with the repo-local identity `Amlan Sahoo <amlan.sahoo.98@gmail.com>`, the same as `personal-website`. Remote: `git@github.com:amlsn/halves.git` (private; the GitHub account was renamed from omlin to amlsn).
 
 ## T2. Client app shell
 - **Svelte 5 + Vite.** The user's criterion is *the lightest and fastest at runtime*; the UI is mostly AI-built.
